@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <!-- Mapa zajmująca całą dostępną przestrzeń nad przyciskami -->
+
+    <TextView
+        android:id="@+id/nearestDistanceInfo"
+        android:layout_width="280dp"
+        android:layout_height="47dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="24dp"
+        android:padding="8dp"
+        android:text="Najbliższe zdjęcie: 0 m →"
+        android:textColor="#876af7"
+        android:textSize="20sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/compassView"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_margin="10dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="56dp"
+        android:src="@drawable/compass"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Rząd 1, Przycisk 1 -->
+    <org.osmdroid.views.MapView
+        android:id="@+id/mapView"
+        android:layout_width="398dp"
+        android:layout_height="441dp"
+        android:layout_margin="5dp"
+        android:adjustViewBounds="true"
+        app:layout_constraintBottom_toTopOf="@+id/btn_take_photo"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/compassView"
+        app:layout_constraintVertical_bias="0.0" />
+
+    <Button
+        android:id="@+id/btn_connect_photos"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_margin="5dp"
+        android:layout_marginBottom="12dp"
+        android:text="Twórz połączenia"
+        app:layout_constraintBottom_toTopOf="@+id/logTV"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHeight_percent="0.07"
+        app:layout_constraintStart_toEndOf="@+id/btn_show_graph"
+        app:layout_constraintWidth_percent="0.35" />
+
+    <TextView
+        android:id="@+id/logTV"
+        android:layout_width="336dp"
+        android:layout_height="47dp"
+        android:layout_marginBottom="16dp"
+        android:padding="8dp"
+        android:text="Log: "
+        android:textColor="#876af7"
+        android:textSize="14sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.533"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/btn_show_graph"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_margin="5dp"
+        android:text="Pokaż graf"
+        app:layout_constraintBottom_toTopOf="@+id/logTV"
+        app:layout_constraintEnd_toStartOf="@+id/btn_connect_photos"
+        app:layout_constraintHeight_percent="0.07"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintWidth_percent="0.35" />
+
+    <Button
+        android:id="@+id/btn_load_photos"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_margin="5dp"
+        android:layout_marginBottom="4dp"
+        android:text="Wczytaj zdjęcia"
+        app:layout_constraintBottom_toTopOf="@+id/btn_show_graph"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHeight_percent="0.07"
+        app:layout_constraintStart_toEndOf="@+id/btn_take_photo"
+        app:layout_constraintWidth_percent="0.35" />
+
+    <Button
+        android:id="@+id/btn_take_photo"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_margin="5dp"
+        android:layout_marginBottom="4dp"
+        android:text="Zrób zdjęcie"
+        app:layout_constraintBottom_toTopOf="@+id/btn_show_graph"
+        app:layout_constraintEnd_toStartOf="@+id/btn_load_photos"
+        app:layout_constraintHeight_percent="0.07"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintWidth_percent="0.35" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
