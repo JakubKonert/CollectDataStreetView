@@ -26,8 +26,6 @@ class MakeGraphActivity : AppCompatActivity() {
     private val photoMarkers = mutableMapOf<String, Marker>()
     private val graphEdges = mutableListOf<Pair<String, String>>()
     private val lineOverlays = mutableMapOf<String, Polyline>()
-    private var selectedMarker: Marker? = null
-    private var photos: Array<PhotoModel> = emptyArray<PhotoModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -73,29 +71,27 @@ class MakeGraphActivity : AppCompatActivity() {
     }
 
     private fun loadPhotosWithMarkers() {
-        val metadataFile = File(getExternalFilesDir(null), "photo_metadata.txt")
+        val metadataFile = File(getExternalFilesDir(null), "photo_metadata.json")
         if (!metadataFile.exists()) return
 
-        val photoListFromFile = metadataFile.readLines().mapNotNull { line ->
-            try {
-                Json.decodeFromString<PhotoModel>(line)
-            } catch (e: Exception) {
-                println("Błąd podczas deserializacji linii: $line")
-                e.printStackTrace()
-                null
+        try {
+            val photoListFromFile = Json.decodeFromString<List<PhotoModel>>(metadataFile.readText())
+
+            if (photoListFromFile.isEmpty()) return
+
+            for (photoFromFile in photoListFromFile) {
+                if (photos.any { it.id == photoFromFile.id }) continue
+
+                photos = photos.plus(photoFromFile)
+
+                val position = GeoPoint(photoFromFile.latitude, photoFromFile.longitude)
+                addMarker(photoFromFile, position)
             }
+            mapView.controller.setCenter(GeoPoint(photoListFromFile.first().latitude, photoListFromFile.first().longitude))
+        } catch (e: Exception) {
+            println("Błąd podczas odczytu lub deserializacji pliku JSON: ${e.message}")
+            e.printStackTrace()
         }
-
-        if(!photoListFromFile.any()) return
-
-        for (photoFromFile in photoListFromFile)
-        {
-            if(photos.any{it.id == photoFromFile.id}) continue
-            photos = photos.plus(photoFromFile)
-            val position = GeoPoint(photoFromFile.latitude, photoFromFile.longitude)
-            addMarker(photoFromFile, position,)
-        }
-        mapView.controller.setCenter(GeoPoint(photoListFromFile.first().latitude, photoListFromFile.first().longitude))
     }
 
     private fun addMarker(photoInfo: PhotoModel, position: GeoPoint) {
@@ -104,7 +100,6 @@ class MakeGraphActivity : AppCompatActivity() {
         marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
         marker.title = "Zdjęcie ID: $photoInfo.id"
         marker.id = photoInfo.id
-        marker.isDraggable = true
         marker.relatedObject = photoInfo
 
         marker.setOnMarkerClickListener { clickedMarker, _ ->

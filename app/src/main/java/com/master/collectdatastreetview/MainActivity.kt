@@ -12,14 +12,18 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Bundle
 import android.provider.MediaStore
+import android.text.SpannableString
+import android.text.style.ForegroundColorSpan
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.drawerlayout.widget.DrawerLayout
 import org.osmdroid.config.Configuration
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
@@ -30,6 +34,7 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
+import com.google.android.material.navigation.NavigationView
 import java.io.File
 import java.util.UUID
 import kotlinx.serialization.encodeToString
@@ -37,36 +42,43 @@ import kotlinx.serialization.json.Json
 
 class MainActivity : AppCompatActivity(), SensorEventListener {
 
+    //region Props
+
     private lateinit var mapView: MapView
     private lateinit var compassView: ImageView
     private lateinit var nearestDistanceInfo: TextView
+    private lateinit var clusterCounter: TextView
     private lateinit var logTV: TextView
     private lateinit var btnTakePhoto: Button
-    private lateinit var btnLoadPhotos: Button
-    private lateinit var btnShowGraph: Button
-    private lateinit var btnConnectPhotos: Button
-
+    private lateinit var drawerLayout: DrawerLayout
+    private lateinit var navigationView: NavigationView
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var photoLauncher: ActivityResultLauncher<Intent>
     private lateinit var sensorManager: SensorManager
     private lateinit var userMarker: Marker
     private lateinit var locationRequest: LocationRequest
     private lateinit var locationCallback: LocationCallback
-
+    private lateinit var drawerToggle: ActionBarDrawerToggle
     private var currentOrientation: String = "Unknown"
     private var currentDirectionVal: Float = 0.0f
+    private var isAutoFocusEnabled = true
     private lateinit var currentLocation: GeoPoint
 
     private var accelerometerReading = FloatArray(3)
     private var magnetometerReading = FloatArray(3)
     private var currentPhotoFile: File? = null
     private var currnetPhotoName: String = ""
+    private var clusterCount: Int = 0
+    private var clusterMinDistance: Int = 9
     private var photos: Array<PhotoModel> = emptyArray<PhotoModel>()
-    private lateinit var userIcon: Bitmap;
+    private var clusters: Array<ClusterModel> = emptyArray<ClusterModel>()
+    private lateinit var userIcon: Bitmap
 
     companion object {
         const val REQUEST_PERMISSIONS = 100
     }
+
+    //endregion
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -77,12 +89,13 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
         mapView = findViewById(R.id.mapView)
         btnTakePhoto = findViewById(R.id.btn_take_photo)
-        btnLoadPhotos = findViewById(R.id.btn_load_photos)
-        btnShowGraph = findViewById(R.id.btn_show_graph)
-        btnConnectPhotos = findViewById(R.id.btn_connect_photos)
+        drawerLayout = findViewById(R.id.drawer_layout)
+        navigationView = findViewById(R.id.navigation_view)
         compassView = findViewById(R.id.compassView)
         nearestDistanceInfo = findViewById(R.id.nearestDistanceInfo)
         logTV = findViewById(R.id.logTV)
+        clusterCounter = findViewById(R.id.cluster_counter)
+        updateClusterCounterText(clusterCount)
 
         mapView.setMultiTouchControls(true)
         mapView.controller.setZoom(18.0)
@@ -94,8 +107,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         locationRequest = LocationRequest.Builder(
             Priority.PRIORITY_HIGH_ACCURACY,
-            5000
-        ).setMinUpdateIntervalMillis(2000)
+            1000
+        ).setMinUpdateIntervalMillis(500)
             .build()
 
         locationCallback = object : LocationCallback() {
@@ -105,7 +118,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                     currentLocation = GeoPoint(userLocation.latitude,userLocation.longitude)
                     updateUserLocationOnMap(userLocation)
                     updateNearestPhotoDistance(userLocation)
-                    logTV.text = "Log: Twoja lokalizacja: ${location.latitude} ${location.longitude}"
+                    updateLogText("Twoja lokalizacja: ${location.latitude} ${location.longitude}")
                 }
             }
         }
@@ -116,55 +129,126 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             if (result.resultCode == RESULT_OK) {
                 savePhotoMetadata()
             }
+            btnTakePhoto.isEnabled = true
         }
 
         btnTakePhoto.setOnClickListener {
             if (checkPermissions()) {
+                btnTakePhoto.isEnabled = false
                 takePhoto()
             } else {
                 requestPermissions()
             }
         }
 
-        btnLoadPhotos.setOnClickListener {
-            loadPhotosFromFile()
-        }
+        val toolbar: androidx.appcompat.widget.Toolbar = findViewById(R.id.toolbar)
+        setSupportActionBar(toolbar)
+        drawerToggle = ActionBarDrawerToggle(
+            this,
+            drawerLayout,
+            toolbar,
+            R.string.drawer_open,
+            R.string.drawer_close
+        )
+        drawerLayout.addDrawerListener(drawerToggle)
+        drawerToggle.syncState()
 
-        btnShowGraph.setOnClickListener {
-            val intent = Intent(this, GraphActivity::class.java)
-            startActivity(intent)
-        }
+        navigationView.setNavigationItemSelectedListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.btn_connect_photos -> {
+                    val intent = Intent(this, MakeGraphActivity::class.java)
+                    startActivity(intent)
+                    true
+                }
+                R.id.btn_load_photos -> {
+                    loadPhotosAndClusters()
+                    true
+                }
+                R.id.btn_show_graph ->{
+                    val intent = Intent(this, GraphActivity::class.java)
+                    startActivity(intent)
+                    true
+                }
+                R.id.autoFocus ->{
+                    isAutoFocusEnabled = !isAutoFocusEnabled
+                    menuItem.isChecked = !isAutoFocusEnabled
+                    menuItem.title = if(isAutoFocusEnabled) "Auto Focus: ON" else "Auto Focus: OFF"
 
-        btnConnectPhotos.setOnClickListener {
-            val intent = Intent(this, MakeGraphActivity::class.java)
-            startActivity(intent)
+                    var color = if (isAutoFocusEnabled) {
+                        ContextCompat.getColor(this, R.color.enabled_color)
+                    }
+                    else
+                    {
+                        ContextCompat.getColor(this, R.color.disabled_color)
+                    }
+
+                    val spannableTitle = SpannableString(menuItem.title)
+                    spannableTitle.setSpan(ForegroundColorSpan(color), 0, spannableTitle.length, 0)
+                    menuItem.title = spannableTitle
+
+                    true
+                }
+                else -> false
+            }
         }
 
         requestPermissions()
     }
 
-    private fun startLocationUpdates() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, mainLooper)
+
+    //region LoadData
+
+    private fun loadPhotosAndClusters() {
+        loadPhotosFromFile()
+        loadClustersFromFile()
+    }
+
+    private fun loadPhotosFromFile() {
+        val metadataFile = File(getExternalFilesDir(null), "photo_metadata.json")
+        if (!metadataFile.exists()) return
+
+        try {
+            val photoListFromFile = Json.decodeFromString<List<PhotoModel>>(metadataFile.readText())
+
+            for (photoFromFile in photoListFromFile) {
+                if (photos.any { it.id == photoFromFile.id }) continue
+
+                photos = photos.plus(photoFromFile)
+
+                val position = GeoPoint(photoFromFile.latitude, photoFromFile.longitude)
+                addMarker(position, "Zdjęcie ID: ${photoFromFile.id}", photoFromFile.id)
+            }
+        } catch (e: Exception) {
+            updateLogText("Błąd podczas odczytu lub deserializacji zdjęć: ${e.message}")
+            e.printStackTrace()
         }
     }
 
-    private fun stopLocationUpdates() {
-        fusedLocationClient.removeLocationUpdates(locationCallback)
-    }
+    private fun loadClustersFromFile() {
+        val clusterFile = File(getExternalFilesDir(null), "clusters.json")
+        if (!clusterFile.exists()) return
 
-    private fun updateUserLocationOnMap(userLocation: GeoPoint) {
-        if (!::userMarker.isInitialized) {
-            userMarker = Marker(mapView)
-            userMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-            userMarker.icon = BitmapDrawable(resources, userIcon)
-            mapView.overlays.add(userMarker)
+        try {
+            val clusterListFromFile = Json.decodeFromString<List<ClusterModel>>(clusterFile.readText())
+
+            for (clusterFromFile in clusterListFromFile) {
+                if (clusters.any { it.id == clusterFromFile.id }) continue
+
+                clusters = clusters.plus(clusterFromFile)
+
+                displayClusterOnMap(clusterFromFile)
+            }
+
+            updateClusterCounterText(clusters.size)
+        } catch (e: Exception) {
+            updateLogText("Błąd podczas odczytu lub deserializacji skupisk: ${e.message}")
+            e.printStackTrace()
         }
-
-        userMarker.position = userLocation
-        mapView.controller.setCenter(userLocation)
-        mapView.invalidate()
     }
+
+    //endregion
+
+//region Photo
 
     private fun takePhoto() {
         val photoName = "IMG_${UUID.randomUUID()}.jpg"
@@ -183,54 +267,82 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
         intent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri)
         photoLauncher.launch(intent)
-
     }
 
     private fun savePhotoMetadata() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            val metadataFile = File(getExternalFilesDir(null), "photo_metadata.txt")
+            val metadataFile = File(getExternalFilesDir(null), "photo_metadata.json")
+            val clusterFile = File(getExternalFilesDir(null), "clusters.json")
+
             if (currentLocation != null && currentPhotoFile != null) {
                 updateNearestPhotoDistance(GeoPoint(currentLocation.latitude,currentLocation.longitude))
                 val photo = PhotoModel(
                     id = currentPhotoFile!!.name,
+                    clusterId = null,
                     fileName = currnetPhotoName,
                     latitude = currentLocation.latitude,
                     longitude = currentLocation.longitude,
                     direction = currentOrientation,
                     directionVal = currentDirectionVal
                 )
-                photos = photos.plus(photo)
-                val jsonData = Json.encodeToString(photo)
-                metadataFile.appendText(jsonData + "\n")
+
+                val existingPhotosInFile: MutableList<PhotoModel> = if (metadataFile.exists() && metadataFile.length() > 0) {
+                    val fileContent = metadataFile.readText()
+                    Json.decodeFromString(fileContent)
+                } else {
+                    mutableListOf()
+                }
+
+                val existingClustersInFile: MutableList<ClusterModel> = if (clusterFile.exists() && clusterFile.length() > 0) {
+                    val clusterContent = clusterFile.readText()
+                    Json.decodeFromString(clusterContent)
+                } else {
+                    mutableListOf()
+                }
+
+                val nearestCluster = existingClustersInFile.minByOrNull { cluster ->
+                    cluster.photos.minOf { GeoPoint(it.latitude, it.longitude).distanceToAsDouble(
+                        GeoPoint(photo.latitude, photo.longitude)) }
+                }
+
+                if (nearestCluster != null && GeoPoint(photo.latitude, photo.longitude).distanceToAsDouble(
+                        GeoPoint(nearestCluster.photos.first().latitude, nearestCluster.photos.first().longitude)) <= clusterMinDistance
+                ) {
+                    nearestCluster.photos = nearestCluster.photos.plus(photo)
+                    photo.clusterId = nearestCluster.id
+                } else {
+                    val newCluster = ClusterModel(
+                        id = UUID.randomUUID().toString(),
+                        photos = mutableListOf(photo),
+                    )
+                    existingClustersInFile.add(newCluster)
+                    photo.clusterId = newCluster.id
+                }
+
+                existingPhotosInFile.add(photo)
+
+                val jsonDataPhotos = Json.encodeToString(existingPhotosInFile)
+                metadataFile.writeText(jsonDataPhotos)
+
+                val jsonDataClusters = Json.encodeToString(existingClustersInFile)
+                clusterFile.writeText(jsonDataClusters)
+
+                clusters = existingClustersInFile.toTypedArray<ClusterModel>()
+                photos = existingPhotosInFile.toTypedArray<PhotoModel>()
+
                 addMarker(GeoPoint(currentLocation.latitude, currentLocation.longitude),
                     "Zdjęcie ID: ${currentPhotoFile!!.name}", currentPhotoFile!!.name)
+
+                mapView.overlays.removeAll { it is org.osmdroid.views.overlay.Polygon }
+                for (cluster in clusters) {
+                    displayClusterOnMap(cluster)
+                }
+
+                updateClusterCounterText(clusters.size)
             }
 
         } else {
             requestPermissions()
-        }
-    }
-
-    private fun loadPhotosFromFile() {
-        val metadataFile = File(getExternalFilesDir(null), "photo_metadata.txt")
-        if (!metadataFile.exists()) return
-
-        val photoListFromFile = metadataFile.readLines().mapNotNull { line ->
-            try {
-                Json.decodeFromString<PhotoModel>(line)
-            } catch (e: Exception) {
-                println("Błąd podczas deserializacji linii: $line")
-                e.printStackTrace()
-                null
-            }
-        }
-
-        for (photoFromFile in photoListFromFile)
-        {
-            if(photos.any{it.id == photoFromFile.id}) continue
-            photos = photos.plus(photoFromFile)
-            val position = GeoPoint(photoFromFile.latitude, photoFromFile.longitude)
-            addMarker(position, "Zdjęcie ID: $photoFromFile.id", photoFromFile.id)
         }
     }
 
@@ -265,6 +377,136 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
         mapView.overlays.add(marker)
     }
+
+
+    private fun showPhotoInfoDialog(photoInfo: String) {
+        val existingDialog = supportFragmentManager.findFragmentByTag("PhotoInfoDialog")
+        if (existingDialog == null) {
+            val dialog = PhotoInfoDialogFragment.newInstance(photoInfo)
+            dialog.show(supportFragmentManager, "PhotoInfoDialog")
+        }
+    }
+
+    private fun updateNearestPhotoDistance(userLocation: GeoPoint) {
+        if (photos.isEmpty()) {
+            updateNearestDistanceText("Brak wykonanych zdjęć")
+            return
+        }
+
+        var nearestDistance = Double.MAX_VALUE
+        var nearestPhoto: PhotoModel? = null
+
+        photos.forEach { photo ->
+            val photoLocation = GeoPoint(photo.latitude, photo.longitude)
+            val distance = userLocation.distanceToAsDouble(photoLocation)
+            if (distance < nearestDistance) {
+                nearestDistance = distance
+                nearestPhoto = photo
+            }
+        }
+
+        nearestPhoto?.let { photo ->
+            val photoLocation = GeoPoint(photo.latitude, photo.longitude)
+            val bearing = userLocation.bearingTo(photoLocation).toFloat()
+
+            val direction = when (bearing) {
+                in -22.5..22.5 -> "↑"
+                in 22.5..67.5 -> "↗"
+                in 67.5..112.5 -> "→"
+                in 112.5..157.5 -> "↘"
+                in -67.5..-22.5 -> "↖"
+                in -112.5..-67.5 -> "←"
+                in -157.5..-112.5 -> "↙"
+                else -> "↓"
+            }
+
+            updateNearestDistanceText("${"%.1f".format(nearestDistance)} m $direction")
+        }
+    }
+
+//endregion
+
+    //region Cluster
+
+    private fun displayClusterOnMap(cluster: ClusterModel) {
+        val geoPoints = cluster.photos.map { GeoPoint(it.latitude, it.longitude) }
+        if (geoPoints.isNotEmpty()) {
+            val boundingBox = org.osmdroid.util.BoundingBox.fromGeoPointsSafe(geoPoints)
+            val center = boundingBox.centerWithDateLine
+
+            val radius = geoPoints.maxOfOrNull {
+                center.distanceToAsDouble(it)
+            } ?: 0.0
+
+            val circleOverlay = org.osmdroid.views.overlay.Polygon(mapView).apply {
+                points = createCircle(center, radius)
+                fillPaint.color = 0x44FF0000
+                outlinePaint.color = 0x00FF0000
+                outlinePaint.strokeWidth = 2.0f
+                setOnClickListener { _, _,_ ->
+                    showClusterInfoDialog(cluster)
+                    true
+                }
+            }
+            mapView.overlays.add(circleOverlay)
+            mapView.invalidate()
+        }
+    }
+
+    private fun createCircle(center: GeoPoint, radius: Double): List<GeoPoint> {
+        val points = mutableListOf<GeoPoint>()
+        val steps = 36
+        for (i in 0 until steps) {
+            val angle = Math.toRadians((i * 360.0 / steps))
+            val latitudeOffset = radius / 6378137.0 * Math.cos(angle)
+            val longitudeOffset = radius / (6378137.0 * Math.cos(Math.toRadians(center.latitude))) * Math.sin(angle)
+            points.add(GeoPoint(
+                center.latitude + Math.toDegrees(latitudeOffset),
+                center.longitude + Math.toDegrees(longitudeOffset)
+            ))
+        }
+        points.add(points.first())
+        return points
+    }
+
+    private fun showClusterInfoDialog(cluster: ClusterModel) {
+        val clusterInfo = """
+        ID: ${cluster.id}
+        Liczba zdjęć: ${cluster.photos.size}
+        Zdjęcia:
+        ${cluster.photos.joinToString(separator = "\n") { it.fileName }}
+    """.trimIndent()
+
+        val dialogBuilder = androidx.appcompat.app.AlertDialog.Builder(this)
+        dialogBuilder.setTitle("Informacje o skupisku")
+        dialogBuilder.setMessage(clusterInfo)
+        dialogBuilder.setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
+        dialogBuilder.show()
+    }
+
+    //endregion
+
+    //region UpdateText
+
+    private fun updateClusterCounterText(count: Int)
+    {
+        clusterCount = count
+        clusterCounter.setText("Liczba skupisk: ${clusterCount}")
+    }
+
+    private fun updateNearestDistanceText(text: String)
+    {
+        nearestDistanceInfo.setText("Najbliższe zdjęcie: ${text}")
+    }
+
+    private fun updateLogText(text: String)
+    {
+        logTV.setText("Log: ${text}")
+    }
+
+    //endregion
+
+    //region Compass
 
     override fun onResume() {
         super.onResume()
@@ -304,56 +546,43 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             else -> "S"
         }
 
+        currentDirectionVal = azimuth
         val rotation = -azimuth
         compassView.rotation = rotation
     }
 
     override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) {}
 
-    private fun showPhotoInfoDialog(photoInfo: String) {
-        val existingDialog = supportFragmentManager.findFragmentByTag("PhotoInfoDialog")
-        if (existingDialog == null) {
-            val dialog = PhotoInfoDialogFragment.newInstance(photoInfo)
-            dialog.show(supportFragmentManager, "PhotoInfoDialog")
+    //endregion
+
+    //region Location
+
+    private fun startLocationUpdates() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, mainLooper)
         }
     }
 
-    private fun updateNearestPhotoDistance(userLocation: GeoPoint) {
-        if (photos.isEmpty()) {
-            nearestDistanceInfo.text = "Brak wykonanych zdjęć"
-            return
-        }
-
-        var nearestDistance = Double.MAX_VALUE
-        var nearestPhoto: PhotoModel? = null
-
-        photos.forEach { photo ->
-            val photoLocation = GeoPoint(photo.latitude, photo.longitude)
-            val distance = userLocation.distanceToAsDouble(photoLocation)
-            if (distance < nearestDistance) {
-                nearestDistance = distance
-                nearestPhoto = photo
-            }
-        }
-
-        nearestPhoto?.let { photo ->
-            val photoLocation = GeoPoint(photo.latitude, photo.longitude)
-            val bearing = userLocation.bearingTo(photoLocation).toFloat()
-
-            val direction = when (bearing) {
-                in -22.5..22.5 -> "↑"
-                in 22.5..67.5 -> "↗"
-                in 67.5..112.5 -> "→"
-                in 112.5..157.5 -> "↘"
-                in -67.5..-22.5 -> "↖"
-                in -112.5..-67.5 -> "←"
-                in -157.5..-112.5 -> "↙"
-                else -> "↓"
-            }
-
-            nearestDistanceInfo.text = "Najbliższe zdjęcie: ${"%.1f".format(nearestDistance)} m $direction"
-        }
+    private fun stopLocationUpdates() {
+        fusedLocationClient.removeLocationUpdates(locationCallback)
     }
+
+    private fun updateUserLocationOnMap(userLocation: GeoPoint) {
+        if (!::userMarker.isInitialized) {
+            userMarker = Marker(mapView)
+            userMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+            userMarker.icon = BitmapDrawable(resources, userIcon)
+            mapView.overlays.add(userMarker)
+        }
+
+        userMarker.position = userLocation
+        if(isAutoFocusEnabled) mapView.controller.setCenter(userLocation)
+        mapView.invalidate()
+    }
+
+    //endregion
+
+    //region Permissions
 
     private fun checkPermissions(): Boolean {
         val permissions = arrayOf(
@@ -380,9 +609,10 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 startLocationUpdates()
             } else {
-                logTV.text = "Log: Brak uprawnień do lokalizacji"
+                updateLogText("Brak uprawnień do lokalizacji")
             }
         }
     }
 
+    //endregion
 }

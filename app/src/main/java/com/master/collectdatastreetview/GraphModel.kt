@@ -6,5 +6,5 @@ import kotlinx.serialization.Serializable
 data class GraphModel(
     val name: String,
     val date: String,
-    val vertices: List<VertexModel>
+    var vertices: List<ClusterVertexModel>
 )

@@ -4,6 +4,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class PhotoModel(
     val id: String,
+    var clusterId: String?,
     val fileName: String,
     val latitude: Double,
     val longitude: Double,

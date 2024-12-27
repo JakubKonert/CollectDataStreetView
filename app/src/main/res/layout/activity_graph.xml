@@ -31,21 +31,23 @@
 
     <org.osmdroid.views.MapView
         android:id="@+id/mapView"
-        android:layout_width="403dp"
-        android:layout_height="617dp"
+        android:layout_width="399dp"
+        android:layout_height="594dp"
         android:layout_margin="5dp"
 
         app:layout_constraintBottom_toTopOf="@+id/btn_saveRun"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btn_back_to_main"
-        app:layout_constraintVertical_bias="0.4" />
+        app:layout_constraintVertical_bias="1.0" />
 
     <Button
         android:id="@+id/btn_saveRun"
-        android:layout_width="408dp"
-        android:layout_height="51dp"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
         android:text="Zapisz trasę"
+        app:layout_constraintHeight_percent="0.1"
+        app:layout_constraintHorizontal_bias="0.445"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />

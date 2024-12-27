@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/tile"
+        android:title="Collect Data App"
+        android:enabled="false" />
+    <item
+        android:id="@+id/autoFocus"
+        android:title="Auto focus"
+        android:checkable="true" />
+    <item
+        android:id="@+id/btn_load_photos"
+        android:title="Wczytaj zdjęcia"/>
+    <item
+        android:id="@+id/btn_connect_photos"
+        android:title="Twórz połączenia" />
+    <item
+        android:id="@+id/btn_show_graph"
+        android:title="Pokaż graf"/>
+    <item
+        android:id="@+id/version"
+        android:title="1.0"
+        android:enabled="false" />
+</menu>

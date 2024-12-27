@@ -19,6 +19,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.CollectDataStreetView"
+        android:minSdkVersion="29"
         tools:targetApi="34">
         <activity
             android:name=".MakeGraphActivity"
