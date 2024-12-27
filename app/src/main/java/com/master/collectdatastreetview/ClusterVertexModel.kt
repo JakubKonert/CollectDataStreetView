@@ -5,5 +5,5 @@ import kotlinx.serialization.Serializable
 data class ClusterVertexModel(
     val id: String,
     var vertices: List<VertexModel>,
-    var edges: List<ClusterVertexModel>
+    var edges: List<String> //ClusterVertexModels id
 )

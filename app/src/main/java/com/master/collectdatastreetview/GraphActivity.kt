@@ -66,9 +66,9 @@ class GraphActivity : AppCompatActivity() {
 
 
     private fun loadGraphFromFile() {
-        val file = File(getExternalFilesDir(null), "graph_data.json")
+        val file = File(getExternalFilesDir(null), "graph.json")
         if (!file.exists()) {
-            Toast.makeText(this, "Plik graph_data.json nie istnieje!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Plik graph.json nie istnieje!", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -139,7 +139,7 @@ class GraphActivity : AppCompatActivity() {
     private fun getGraphFileUri(): Uri? {
         val projection = arrayOf(MediaStore.Files.FileColumns._ID)
         val selection = MediaStore.Files.FileColumns.DISPLAY_NAME + "=?"
-        val selectionArgs = arrayOf("graph_data.json")
+        val selectionArgs = arrayOf("graph.json")
 
         val cursor = contentResolver.query(
             MediaStore.Files.getContentUri("external"),
@@ -193,7 +193,8 @@ class GraphActivity : AppCompatActivity() {
 
         val photoDir = File(getExternalFilesDir(null), "photos")
         val metadataFile = File(getExternalFilesDir(null), "photo_metadata.txt")
-        val graphFile = File(getExternalFilesDir(null), "graph_data.json")
+        val graphFile = File(getExternalFilesDir(null), "graph.json")
+        val clustersFile = File(getExternalFilesDir(null), "clusters.json")
 
         if (photoDir.exists()) {
             val newPhotoDir = File(runFolder, "photos")
@@ -201,11 +202,15 @@ class GraphActivity : AppCompatActivity() {
         }
 
         if (metadataFile.exists()) {
-            moveFile(metadataFile, File(runFolder, "photo_metadata.txt"))
+            moveFile(metadataFile, File(runFolder, "photo_metadata.json"))
         }
 
         if (graphFile.exists()) {
-            moveFile(graphFile, File(runFolder, "graph_data.json"))
+            moveFile(graphFile, File(runFolder, "graph.json"))
+        }
+
+        if (clustersFile.exists()) {
+            moveFile(clustersFile, File(runFolder, "clusters.json"))
         }
 
         Toast.makeText(this, "Zapisano", Toast.LENGTH_SHORT).show()
@@ -242,15 +247,18 @@ class GraphActivity : AppCompatActivity() {
 
     private fun areGeneratedFilesExists():Boolean{
         val photoDir = File(getExternalFilesDir(null), "photos")
-        val metadataFile = File(getExternalFilesDir(null), "photo_metadata.txt")
-        val graphFile = File(getExternalFilesDir(null), "graph_data.json")
+        val metadataFile = File(getExternalFilesDir(null), "photo_metadata.json")
+        val graphFile = File(getExternalFilesDir(null), "graph.json")
+        val clustersFile = File(getExternalFilesDir(null), "clusters.json")
 
         val isMetadataFileAvailable = metadataFile.exists()
 
         val isGraphFileAvailable = graphFile.exists()
 
+        val isclustersFileAvailable = clustersFile.exists()
+
         val arePhotosAvailable = photoDir.exists() && photoDir.listFiles()?.isNotEmpty() == true
 
-        return isMetadataFileAvailable || isGraphFileAvailable || arePhotosAvailable
+        return isMetadataFileAvailable && isGraphFileAvailable && isclustersFileAvailable && arePhotosAvailable
     }
 }

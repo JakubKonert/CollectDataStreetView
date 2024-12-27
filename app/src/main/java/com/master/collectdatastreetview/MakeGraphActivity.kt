@@ -1,8 +1,6 @@
 package com.master.collectdatastreetview
 
-import android.net.Uri
 import android.os.Bundle
-import android.provider.MediaStore
 import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -11,7 +9,7 @@ import kotlinx.serialization.json.Json
 import org.osmdroid.config.Configuration
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
-import org.osmdroid.views.overlay.Marker
+import org.osmdroid.views.overlay.Polygon
 import org.osmdroid.views.overlay.Polyline
 import java.io.File
 import java.text.SimpleDateFormat
@@ -22,10 +20,12 @@ class MakeGraphActivity : AppCompatActivity() {
     private lateinit var mapView: MapView
     private lateinit var btnBack: Button
     private lateinit var btnSaveGraph: Button
-    private lateinit var btnLoadGraph: Button
-    private val photoMarkers = mutableMapOf<String, Marker>()
-    private val graphEdges = mutableListOf<Pair<String, String>>()
-    private val lineOverlays = mutableMapOf<String, Polyline>()
+
+    private var clusters: MutableList<ClusterModel> = mutableListOf()
+    private var graphClusters: MutableList<ClusterVertexModel> = mutableListOf()
+
+    private var selectedCluster: ClusterVertexModel? = null
+    private val connectionLines = mutableMapOf<Polyline, Pair<ClusterVertexModel, ClusterVertexModel>>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,228 +35,233 @@ class MakeGraphActivity : AppCompatActivity() {
         mapView = findViewById(R.id.mapView)
         btnBack = findViewById(R.id.btn_back)
         btnSaveGraph = findViewById(R.id.btn_save_graph)
-        btnLoadGraph = findViewById(R.id.btn_load_graph)
 
         btnBack.setOnClickListener {
             finish()
         }
 
-        btnSaveGraph.setOnClickListener {
-            saveGraphToMediaStore()
-            checkGraphFileExistence()
+        btnSaveGraph.setOnClickListener{
+            saveGraphToFile()
         }
 
-        btnLoadGraph.setOnClickListener {
-            if (graphEdgesExist()) {
-                Toast.makeText(this, "Najpierw usuń istniejące połączenia", Toast.LENGTH_SHORT).show()
-            } else {
-                loadGraphFromMediaStore()
-            }
-
-        }
-
-        setupMap()
-        checkGraphFileExistence()
+        loadClustersAndDisplayOnMap()
+        createGraphForClusters()
     }
 
-    private fun setupMap() {
-        mapView.setMultiTouchControls(true)
-        mapView.controller.setZoom(15.0)
-        loadPhotosWithMarkers()
-    }
+    //region LoadData
 
-    private fun checkGraphFileExistence() {
-        val uri = getGraphFileUri()
-        btnLoadGraph.isEnabled = uri != null
-    }
+    private fun loadClustersAndDisplayOnMap() {
+        val clusterFile = File(getExternalFilesDir(null), "clusters.json")
 
-    private fun loadPhotosWithMarkers() {
-        val metadataFile = File(getExternalFilesDir(null), "photo_metadata.json")
-        if (!metadataFile.exists()) return
-
-        try {
-            val photoListFromFile = Json.decodeFromString<List<PhotoModel>>(metadataFile.readText())
-
-            if (photoListFromFile.isEmpty()) return
-
-            for (photoFromFile in photoListFromFile) {
-                if (photos.any { it.id == photoFromFile.id }) continue
-
-                photos = photos.plus(photoFromFile)
-
-                val position = GeoPoint(photoFromFile.latitude, photoFromFile.longitude)
-                addMarker(photoFromFile, position)
-            }
-            mapView.controller.setCenter(GeoPoint(photoListFromFile.first().latitude, photoListFromFile.first().longitude))
-        } catch (e: Exception) {
-            println("Błąd podczas odczytu lub deserializacji pliku JSON: ${e.message}")
-            e.printStackTrace()
-        }
-    }
-
-    private fun addMarker(photoInfo: PhotoModel, position: GeoPoint) {
-        val marker = Marker(mapView)
-        marker.position = position
-        marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-        marker.title = "Zdjęcie ID: $photoInfo.id"
-        marker.id = photoInfo.id
-        marker.relatedObject = photoInfo
-
-        marker.setOnMarkerClickListener { clickedMarker, _ ->
-            if (selectedMarker == null) {
-                selectedMarker = clickedMarker
-                Toast.makeText(this, "Marker wybrany: ${clickedMarker.id}", Toast.LENGTH_SHORT).show()
-            } else if (selectedMarker != clickedMarker) {
-                createConnection(selectedMarker!!, clickedMarker)
-                selectedMarker = null
-            } else {
-                selectedMarker = null
-            }
-            true
-        }
-
-        mapView.overlays.add(marker)
-        photoMarkers[photoInfo.id] = marker
-    }
-
-    private fun createConnection(markerA: Marker, markerB: Marker) {
-        val idA = markerA.id
-        val idB = markerB.id
-
-        if (edgeExists(idA, idB)) {
-            Toast.makeText(this, "Połączenie już istnieje", Toast.LENGTH_SHORT).show()
+        if (!clusterFile.exists()) {
             return
         }
 
-        val line = Polyline()
-        line.addPoint(markerA.position)
-        line.addPoint(markerB.position)
-        line.outlinePaint.apply {
-            color = android.graphics.Color.RED
-            strokeWidth = 15f
-            isAntiAlias = true
-        }
+        graphClusters.clear()
 
-        line.setOnClickListener { _, _, _ ->
-            removeConnection(idA, idB)
-            true
-        }
+        try {
+            val clusterListFromFile: List<ClusterModel> = Json.decodeFromString(clusterFile.readText())
 
-        graphEdges.add(Pair(idA, idB))
-        val lineId = generateEdgeId(idA, idB)
-        lineOverlays[lineId] = line
-        mapView.overlays.add(line)
-        mapView.invalidate()
-    }
+            for (cluster in clusterListFromFile)
+            {
+                if(clusters.none{it.id == cluster.id})
+                {
+                    clusters.add(cluster)
+                    displayClusterOnMap(cluster)
+                }
+            }
 
-    private fun removeConnection(idA: String, idB: String) {
-        val lineId = generateEdgeId(idA, idB)
-        val line = lineOverlays.remove(lineId)
-        if (line != null) {
-            mapView.overlays.remove(line)
-            graphEdges.removeAll { (a, b) -> (a == idA && b == idB) || (a == idB && b == idA) }
+            mapClustersToGraph()
+            clusters.firstOrNull()?.photos?.firstOrNull()?.let {
+                mapView.controller.setCenter(GeoPoint(it.latitude, it.longitude))
+            }
+
             mapView.invalidate()
-            Toast.makeText(this, "Połączenie usunięte", Toast.LENGTH_SHORT).show()
-        }
-    }
 
-    private fun getGraphFileUri(): Uri? {
-        val projection = arrayOf(MediaStore.Files.FileColumns._ID)
-        val selection = MediaStore.Files.FileColumns.DISPLAY_NAME + "=?"
-        val selectionArgs = arrayOf("graph_data.json")
-        val cursor = contentResolver.query(
-            MediaStore.Files.getContentUri("external"),
-            projection, selection, selectionArgs, null
-        )
-
-        cursor?.use {
-            if (it.moveToFirst()) {
-                val id = it.getLong(it.getColumnIndexOrThrow(MediaStore.Files.FileColumns._ID))
-                return Uri.withAppendedPath(MediaStore.Files.getContentUri("external"), id.toString())
-            }
-        }
-        return null
-    }
-
-    private fun edgeExists(idA: String, idB: String): Boolean {
-        return graphEdges.any { (a, b) -> (a == idA && b == idB) || (a == idB && b == idA) }
-    }
-
-    private fun generateEdgeId(idA: String, idB: String): String {
-        return if (idA < idB) "$idA-$idB" else "$idB-$idA"
-    }
-
-    private fun saveGraphToMediaStore() {
-        val vertices = photoMarkers.map { (photoId, marker) ->
-            val connectedVertices = graphEdges
-                .filter { it.first == photoId || it.second == photoId }
-                .flatMap { listOf(it.first, it.second) }
-                .filter { it != photoId }
-                .distinct()
-
-            VertexModel(
-                photo = marker.relatedObject as PhotoModel,
-                edges = connectedVertices,
-            )
-        }
-
-        val date = SimpleDateFormat("yyyy-MM-dd_HH-mm", Locale.getDefault()).format(Date())
-        val graphModel = GraphModel(
-            name = "Graf_$date",
-            date = date,
-            vertices = vertices
-        )
-
-        val jsonString = Json.encodeToString(graphModel)
-        saveGraphToFile(jsonString)
-    }
-
-    private fun saveGraphToFile(jsonData: String) {
-        val file = File(getExternalFilesDir(null), "graph_data.json")
-        file.writeText(jsonData)
-        Toast.makeText(this, "Graf zapisany do graph_data.json", Toast.LENGTH_SHORT).show()
-    }
-
-    private fun loadGraphFromMediaStore() {
-        val file = File(getExternalFilesDir(null), "graph_data.json")
-        if (!file.exists()) {
-            Toast.makeText(this, "Plik graph_data.json nie istnieje!", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        val jsonData = file.readText()
-        try {
-            val graphModel = Json.decodeFromString<GraphModel>(jsonData)
-            drawGraphOnMap(graphModel)
-            Toast.makeText(this, "Graf załadowany pomyślnie", Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
             e.printStackTrace()
-            Toast.makeText(this, "Błąd podczas wczytywania grafu", Toast.LENGTH_SHORT).show()
         }
     }
 
-    private fun drawGraphOnMap(graphModel: GraphModel) {
-        photoMarkers.clear()
-        lineOverlays.clear()
-        mapView.overlays.clear()
+    //endregion
 
-        graphModel.vertices.forEach { vertex ->
-            val position = GeoPoint(vertex.photo.latitude, vertex.photo.longitude)
-            addMarker(vertex.photo, position)
+    //region SaveData
+
+        private fun saveGraphToFile() {
+            val graphFile = File(getExternalFilesDir(null), "graph.json")
+            val currentDate = SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.getDefault()).format(
+                Date()
+            )
+
+            try {
+                val graphModel = GraphModel(
+                    name = "Graph_$currentDate",
+                    date = currentDate,
+                    vertices = graphClusters
+                )
+
+                val graphData = Json.encodeToString(graphModel)
+                graphFile.writeText(graphData)
+
+                Toast.makeText(this, "Zapisano do graph.json", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Toast.makeText(this, "Nie udało się zapisać.", Toast.LENGTH_SHORT).show()
+            }
         }
 
-        graphModel.vertices.forEach { vertex ->
-            vertex.edges.forEach { connectedVertexId ->
-                val markerA = photoMarkers[vertex.photo.id]
-                val markerB = photoMarkers[connectedVertexId]
-                if (markerA != null && markerB != null) {
-                    createConnection(markerA, markerB)
+    //endregion
+
+
+    //region Cluster
+
+    private fun mapClustersToGraph() {
+       graphClusters.clear()
+        for (cluster in clusters) {
+            val vertices = cluster.photos.map { photo ->
+                    VertexModel(photo = photo, edges = mutableListOf())
+                }
+            for (vertex in vertices) {
+                    vertex.edges.addAll(vertices.filter { it.photo.id != vertex.photo.id }.map { it.photo.id })
+                }
+            graphClusters.add(ClusterVertexModel(id = cluster.id, vertices = vertices, edges = emptyList()))
+        }
+    }
+
+    //endregion
+
+    //region Edges
+
+    private fun createGraphForClusters() {
+        for (cluster in clusters) {
+            val vertices = cluster.photos.map { photo ->
+                VertexModel(
+                    photo = photo,
+                    edges = cluster.photos.filter { it.id != photo.id }
+                        .map { it.id }
+                        .toMutableList()
+                )
+            }
+            graphClusters.add(ClusterVertexModel(id = cluster.id, vertices = vertices, edges = emptyList()))
+        }
+    }
+
+    //endregion
+
+    //region Map
+
+    private fun displayClusterOnMap(cluster: ClusterModel) {
+        val geoPoints = cluster.photos.map { GeoPoint(it.latitude, it.longitude) }
+        if (geoPoints.isNotEmpty()) {
+            val boundingBox = org.osmdroid.util.BoundingBox.fromGeoPointsSafe(geoPoints)
+            val center = boundingBox.centerWithDateLine
+
+            val radius = geoPoints.maxOfOrNull {
+                center.distanceToAsDouble(it)
+            } ?: 0.0
+
+            val circleOverlay = Polygon(mapView).apply {
+                id = cluster.id
+                points = createCircle(center, radius)
+                fillPaint.color = 0x44FF0000
+                outlinePaint.color = 0x00FF0000
+                outlinePaint.strokeWidth = 2.0f
+                setOnClickListener { _, _, _ ->
+                    onClusterClicked(cluster.id)
+                    true
+                }
+            }
+
+            mapView.overlays.add(circleOverlay)
+        }
+    }
+
+    private fun onClusterClicked(clusterId: String) {
+        val clickedCluster = graphClusters.find { it.id == clusterId }
+
+        if (clickedCluster != null) {
+            if (selectedCluster == null) {
+                selectedCluster = clickedCluster
+                Toast.makeText(this, "Wybrano skupisko: ${clickedCluster.id}", Toast.LENGTH_SHORT).show()
+            } else {
+                if (selectedCluster != clickedCluster) {
+                    connectClusters(selectedCluster!!, clickedCluster)
+                    selectedCluster = null
+                } else {
+                    Toast.makeText(this, "Anulowanie wybrania", Toast.LENGTH_SHORT).show()
+                    selectedCluster = null
                 }
             }
         }
     }
 
-    private fun graphEdgesExist(): Boolean {
-        return lineOverlays.isNotEmpty()
+    private fun connectClusters(cluster1: ClusterVertexModel, cluster2: ClusterVertexModel) {
+        cluster1.edges = cluster1.edges.plus(cluster2.id)
+        cluster2.edges = cluster2.edges.plus(cluster1.id)
+
+        val geoPoint1 = GeoPoint(
+            cluster1.vertices.first().photo.latitude,
+            cluster1.vertices.first().photo.longitude
+        )
+        val geoPoint2 = GeoPoint(
+            cluster2.vertices.first().photo.latitude,
+            cluster2.vertices.first().photo.longitude
+        )
+
+        val polyline = Polyline(mapView).apply {
+            addPoint(geoPoint1)
+            addPoint(geoPoint2)
+            setOnClickListener { _, _, _ ->
+                removeConnection(this)
+                true
+            }
+        }
+        polyline.outlinePaint.apply {
+            color = android.graphics.Color.RED
+            strokeWidth = 15f
+            isAntiAlias = true
+        }
+
+        connectionLines[polyline] = Pair(cluster1, cluster2)
+        mapView.overlays.add(polyline)
+        mapView.invalidate()
+
+        Toast.makeText(this, "Połączono: ${cluster1.id} and ${cluster2.id}", Toast.LENGTH_SHORT).show()
     }
+
+    private fun removeConnection(line: Polyline) {
+        val clusters = connectionLines[line]
+
+        if (clusters != null) {
+            val (cluster1, cluster2) = clusters
+
+            cluster1.edges = cluster1.edges.filter { it != cluster2.id }
+            cluster2.edges = cluster2.edges.filter { it != cluster1.id }
+
+            mapView.overlays.remove(line)
+            connectionLines.remove(line)
+            mapView.invalidate()
+
+            Toast.makeText(this, "Usunięto połączenie: ${cluster1.id} and ${cluster2.id}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun createCircle(center: GeoPoint, radius: Double): List<GeoPoint> {
+        val points = mutableListOf<GeoPoint>()
+        val steps = 36
+        for (i in 0 until steps) {
+            val angle = Math.toRadians((i * 360.0 / steps))
+            val latitudeOffset = radius / 6378137.0 * Math.cos(angle)
+            val longitudeOffset = radius / (6378137.0 * Math.cos(Math.toRadians(center.latitude))) * Math.sin(angle)
+            points.add(GeoPoint(
+                center.latitude + Math.toDegrees(latitudeOffset),
+                center.longitude + Math.toDegrees(longitudeOffset)
+            ))
+        }
+        points.add(points.first())
+        return points
+    }
+
+    //endregion
+
 }

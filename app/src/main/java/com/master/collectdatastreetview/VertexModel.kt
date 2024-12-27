@@ -5,5 +5,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class VertexModel(
     val photo: PhotoModel,
-    var edges: List<String>
+    var edges: MutableList<String>
 )

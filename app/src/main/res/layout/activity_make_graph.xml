@@ -18,7 +18,6 @@
         android:layout_margin="5dp"
         android:adjustViewBounds="true" />
 
-    <!-- Przycisk powrotu -->
     <Button
         android:id="@+id/btn_back"
         android:layout_width="0dp"
@@ -29,26 +28,15 @@
         app:layout_constraintWidth_percent="0.3"
         app:layout_constraintBottom_toBottomOf="parent" />
 
-    <!-- Przycisk zapisu grafu -->
     <Button
         android:id="@+id/btn_save_graph"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_margin="5dp"
+        android:layout_marginBottom="8dp"
         android:text="Zapisz graf"
-        android:layout_margin="5dp"
-        app:layout_constraintStart_toEndOf="@+id/btn_back"
-        app:layout_constraintWidth_percent="0.3"
-        app:layout_constraintBottom_toBottomOf="parent" />
-
-    <!-- Przycisk wczytania grafu -->
-    <Button
-        android:id="@+id/btn_load_graph"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="Wczytaj graf"
-        android:layout_margin="5dp"
-        app:layout_constraintStart_toEndOf="@+id/btn_save_graph"
-        app:layout_constraintWidth_percent="0.3"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintWidth_percent="0.3" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
