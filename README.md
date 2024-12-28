@@ -2,10 +2,10 @@ Siemka,
 w tym repozytorium jest kod programu do zbierania danych do wykorzystania w ramach mojej pracy magisterskiej. Kod jest jawny gdyby ktoś był ciekawy co się dzieje w tle działania aplikacji. Interfejs aplikacji jest w języku polskim.
 
 Wymagania:
--Android w wersji minimum 10 do 14 włącznie
--Uprawnienia do aparatu (aplikacja polega na robieniu zdjęć)
--Uprawnienie do lokalizacji (śledzona jest pozycja użytkownika oraz zapisywana jest lokalizacja zrobienia zdjęcia) (lokalizacja musi być włączona podczas działania aplikacji)
--Uprawnienie do zapisu/odczytu w pamięci urządzenia (dane zebrane podczas działania aplikacji są zapisywane w pamięci urządzenia i również są z niego wczytywane podczas ponownego włączenia aplikacji)
+- Android w wersji minimum 10 do 14 włącznie
+- Uprawnienia do aparatu (aplikacja polega na robieniu zdjęć)
+- Uprawnienie do lokalizacji (śledzona jest pozycja użytkownika oraz zapisywana jest lokalizacja zrobienia zdjęcia) (lokalizacja musi być włączona podczas działania aplikacji)
+- Uprawnienie do zapisu/odczytu w pamięci urządzenia (dane zebrane podczas działania aplikacji są zapisywane w pamięci urządzenia i również są z niego wczytywane podczas ponownego włączenia aplikacji)
 
 -Aby zainstalować aplikację należy zezwolić na instalacje aplikacji z nieznanego źródła (aplikacja nie jest wystawiona na Play Store i instalowana jest bezpośrednio z pliku .apk). Jak to zrobić na swoim telefonie najlepiej jest to wygooglować. Może się okazać, że trzeba najpierw włączyć tryb developerski w telefonie, jeśli to będzie wymagane to najlepiej również wygooglować jak to zrobić.
 -Aby zainstalować aplikację należy z głównego folderu tego repozytorium pobrać plik app-release.apk np. poprzez wejście na ten link https://github.com/JakubKonert/CollectDataStreetView/blob/main/app-release.apk (lub bezpośrednio z głównego folderu repozytorum) i kliknąc "trzy kropki" w prawym górnym rogu okna. Następnie wybrać opcję "Download". W tym miejscu zawsze będzie najnowsza/aktualna wersja aplikacji i zainteresowni będą poinformowni, że pojawiła się nowa wersja oraz co się zmieniło. Pobrany plik należy przerzucić na pamięć telefonu oraz go uruchomić, nastąpi wtedy instalacja aplikacji.
