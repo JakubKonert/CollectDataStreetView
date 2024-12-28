@@ -18,6 +18,10 @@
         android:id="@+id/btn_show_graph"
         android:title="Pokaż graf"/>
     <item
+        android:id="@+id/debug_mode"
+        android:title="Tryb Developerski"/>
+
+    <item
         android:id="@+id/version"
         android:title="1.0"
         android:enabled="false" />

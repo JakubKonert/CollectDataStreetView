@@ -39,6 +39,8 @@ import java.io.File
 import java.util.UUID
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import org.osmdroid.events.MapEventsReceiver
+import org.osmdroid.views.overlay.MapEventsOverlay
 
 class MainActivity : AppCompatActivity(), SensorEventListener {
 
@@ -52,6 +54,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private lateinit var btnTakePhoto: Button
     private lateinit var drawerLayout: DrawerLayout
     private lateinit var navigationView: NavigationView
+
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var photoLauncher: ActivityResultLauncher<Intent>
     private lateinit var sensorManager: SensorManager
@@ -63,7 +66,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private var currentDirectionVal: Float = 0.0f
     private var isAutoFocusEnabled = true
     private lateinit var currentLocation: GeoPoint
-
     private var accelerometerReading = FloatArray(3)
     private var magnetometerReading = FloatArray(3)
     private var currentPhotoFile: File? = null
@@ -73,6 +75,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private var photos: Array<PhotoModel> = emptyArray<PhotoModel>()
     private var clusters: Array<ClusterModel> = emptyArray<ClusterModel>()
     private lateinit var userIcon: Bitmap
+    private var isDebugMode: Boolean = false
 
     companion object {
         const val REQUEST_PERMISSIONS = 100
@@ -97,12 +100,12 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         clusterCounter = findViewById(R.id.cluster_counter)
         updateClusterCounterText(clusterCount)
 
-        mapView.setMultiTouchControls(true)
-        mapView.controller.setZoom(18.0)
-
         val originalIcon = ContextCompat.getDrawable(this, R.drawable.userlocation)
         val bitmap = (originalIcon as BitmapDrawable).bitmap
         userIcon = Bitmap.createScaledBitmap(bitmap, 25, 28, true)
+
+        mapView.setMultiTouchControls(true)
+        mapView.controller.setZoom(18.0)
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         locationRequest = LocationRequest.Builder(
@@ -116,9 +119,11 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 for (location in locationResult.locations) {
                     val userLocation = GeoPoint(location.latitude, location.longitude)
                     currentLocation = GeoPoint(userLocation.latitude,userLocation.longitude)
-                    updateUserLocationOnMap(userLocation)
-                    updateNearestPhotoDistance(userLocation)
-                    updateLogText("Twoja lokalizacja: ${location.latitude} ${location.longitude}")
+                    if (!isDebugMode) {
+                        updateUserLocationOnMap(userLocation)
+                        updateNearestPhotoDistance(userLocation)
+                        updateLogText("Twoja lokalizacja: ${location.latitude} ${location.longitude}")
+                    }
                 }
             }
         }
@@ -167,6 +172,15 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 R.id.btn_show_graph ->{
                     val intent = Intent(this, GraphActivity::class.java)
                     startActivity(intent)
+                    true
+                }
+                R.id.debug_mode -> {
+                    isDebugMode = !isDebugMode
+                    menuItem.isChecked = isDebugMode
+                    menuItem.title = if(isDebugMode) "Tryb developerski: ${isDebugMode}" else "Tryb developerski: ${isDebugMode}"
+                    if (isDebugMode) {
+                        enableDeveloperMode()
+                    }
                     true
                 }
                 R.id.autoFocus ->{
@@ -424,7 +438,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         }
     }
 
-//endregion
+    //endregion
 
     //region Cluster
 
@@ -439,7 +453,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             } ?: 0.0
 
             val circleOverlay = org.osmdroid.views.overlay.Polygon(mapView).apply {
-                points = createCircle(center, radius)
+                points = createCircle(center, radius + 3)
                 fillPaint.color = 0x44FF0000
                 outlinePaint.color = 0x00FF0000
                 outlinePaint.strokeWidth = 2.0f
@@ -612,6 +626,30 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 updateLogText("Brak uprawnień do lokalizacji")
             }
         }
+    }
+
+    //endregion
+
+    //region DeveloperMode
+
+    private fun enableDeveloperMode() {
+        val mapEventsOverlay = MapEventsOverlay(object : MapEventsReceiver {
+            override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
+                if (p != null && isDebugMode) {
+                    updateUserLocationOnMap(p)
+                    updateNearestPhotoDistance(p)
+                    updateLogText("Twoja lokalizacja: ${p.latitude} ${p.longitude}")
+                    currentLocation = p
+                    updateLogText("Lokalizacja ustawiona na: ${p.latitude}, ${p.longitude}")
+                }
+                return true
+            }
+
+            override fun longPressHelper(p: GeoPoint?): Boolean {
+                return false
+            }
+        })
+        mapView.overlays.add(mapEventsOverlay)
     }
 
     //endregion

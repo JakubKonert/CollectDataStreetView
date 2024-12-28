@@ -1,9 +1,6 @@
 package com.master.collectdatastreetview
 
-import android.net.Uri
 import android.os.Bundle
-import android.os.Environment
-import android.provider.MediaStore
 import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -12,7 +9,7 @@ import kotlinx.serialization.json.Json
 import org.osmdroid.config.Configuration
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
-import org.osmdroid.views.overlay.Marker
+import org.osmdroid.views.overlay.Polygon
 import org.osmdroid.views.overlay.Polyline
 import java.io.File
 import java.io.FileInputStream
@@ -23,10 +20,17 @@ import java.util.Date
 import java.util.Locale
 
 class GraphActivity : AppCompatActivity() {
+
+    //region Props
+
     private lateinit var mapView: MapView
     private lateinit var btnBack: Button
     private lateinit var btnLoad: Button
     private lateinit var btnSave: Button
+
+    private var clusterVertices: MutableList<ClusterVertexModel> = mutableListOf()
+
+    //endregion
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,7 +47,7 @@ class GraphActivity : AppCompatActivity() {
         }
 
         btnLoad.setOnClickListener{
-            loadGraphFromFile()
+            loadGraphAndDisplayOnMap()
         }
 
         btnSave.setOnClickListener{
@@ -52,112 +56,75 @@ class GraphActivity : AppCompatActivity() {
 
         btnSave.isEnabled = areGeneratedFilesExists()
 
-        btnLoad.isEnabled = getGraphFileUri() != null
+        btnLoad.isEnabled = isGraphFile()
 
         setupMap()
 
     }
 
 
+    //region Setup
+
     private fun setupMap() {
         mapView.setMultiTouchControls(true)
-        mapView.controller.setZoom(15.0)
+        mapView.controller.setZoom(20.0)
     }
 
+    private fun isGraphFile(): Boolean {
+        val graphFile = File(getExternalFilesDir(null), "graph.json")
 
-    private fun loadGraphFromFile() {
-        val file = File(getExternalFilesDir(null), "graph.json")
-        if (!file.exists()) {
-            Toast.makeText(this, "Plik graph.json nie istnieje!", Toast.LENGTH_SHORT).show()
+        if (graphFile.exists()) {
+            val hasData = graphFile.length() > 0
+            return hasData
+        }
+        return false
+    }
+
+    //endregion
+
+    //region LoadData
+
+    private fun loadGraphAndDisplayOnMap() {
+        val graphFile = File(getExternalFilesDir(null), "graph.json")
+        if (!graphFile.exists()) {
+            Toast.makeText(this, "Brak pliku grafu.", Toast.LENGTH_SHORT).show()
             return
         }
 
-        val jsonData = file.readText()
         try {
-            val graphModel = Json.decodeFromString<GraphModel>(jsonData)
-            drawGraphOnMap(graphModel)
-            Toast.makeText(this, "Graf załadowany pomyślnie", Toast.LENGTH_SHORT).show()
-        } catch (e: Exception) {
-            e.printStackTrace()
-            Toast.makeText(this, "Błąd podczas wczytywania grafu", Toast.LENGTH_SHORT).show()
-        }
-    }
+            val graphModel: GraphModel = Json.decodeFromString(graphFile.readText())
+            clusterVertices.clear()
+            clusterVertices.addAll(graphModel.vertices)
 
+            mapView.overlays.clear()
 
-    private fun drawGraphOnMap(graphModel: GraphModel) {
-        mapView.overlays.clear()
+            clusterVertices.firstOrNull()?.vertices?.firstOrNull()?.let {
+                mapView.controller.setCenter(GeoPoint(it.photo.latitude, it.photo.longitude))
+            }
 
-        val photoMarkers = mutableMapOf<String, Marker>()
-        graphModel.vertices.forEach { vertex ->
-            val position = GeoPoint(vertex.photo.latitude, vertex.photo.longitude)
-            val marker = addMarker(vertex.photo, position)
-            photoMarkers[vertex.photo.id] = marker
-        }
+            for (cluster in clusterVertices) {
+                displayClusterOnMap(cluster)
+            }
 
-        graphModel.vertices.forEach { vertex ->
-            vertex.edges.forEach { connectedVertexId ->
-                val markerA = photoMarkers[vertex.photo.id]
-                val markerB = photoMarkers[connectedVertexId]
-                if (markerA != null && markerB != null) {
-                    createConnection(markerA, markerB)
+            for (cluster in clusterVertices) {
+                for (edgeId in cluster.edges) {
+                    val targetCluster = clusterVertices.find { it.id == edgeId }
+                    if (targetCluster != null) {
+                        drawEdgeOnMap(cluster, targetCluster)
+                    }
                 }
             }
+
+            Toast.makeText(this, "Graf wczytany.", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(this, "Błąd wczytywania grafu.", Toast.LENGTH_SHORT).show()
         }
     }
 
+    //endregion
 
-    private fun addMarker(photo: PhotoModel, position: GeoPoint): Marker {
-        val marker = Marker(mapView)
-        marker.position = position
-        marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-        marker.title = "ID: ${photo.id}\nPlik: ${photo.fileName}\nLat: ${position.latitude}, Lon: ${position.longitude}"
-        marker.id = photo.id
-
-        marker.setOnMarkerClickListener { clickedMarker, _ ->
-            Toast.makeText(this, marker.title, Toast.LENGTH_LONG).show()
-            true
-        }
-
-        mapView.overlays.add(marker)
-        return marker
-    }
-
-
-    private fun createConnection(markerA: Marker, markerB: Marker) {
-        val line = Polyline()
-        line.addPoint(markerA.position)
-        line.addPoint(markerB.position)
-        line.outlinePaint.apply {
-            color = android.graphics.Color.RED
-            strokeWidth = 15f
-            isAntiAlias = true
-        }
-        mapView.overlays.add(line)
-    }
-
-
-    private fun getGraphFileUri(): Uri? {
-        val projection = arrayOf(MediaStore.Files.FileColumns._ID)
-        val selection = MediaStore.Files.FileColumns.DISPLAY_NAME + "=?"
-        val selectionArgs = arrayOf("graph.json")
-
-        val cursor = contentResolver.query(
-            MediaStore.Files.getContentUri("external"),
-            projection,
-            selection,
-            selectionArgs,
-            null
-        )
-
-        cursor?.use {
-            if (it.moveToFirst()) {
-                val id = it.getLong(it.getColumnIndexOrThrow(MediaStore.Files.FileColumns._ID))
-                return Uri.withAppendedPath(MediaStore.Files.getContentUri("external"), id.toString())
-            }
-        }
-        return null
-    }
-
+    //region Map
 
     private fun showConfirmationDialog() {
         val builder = AlertDialog.Builder(this)
@@ -177,6 +144,95 @@ class GraphActivity : AppCompatActivity() {
         alertDialog.show()
     }
 
+    private fun displayClusterOnMap(cluster: ClusterVertexModel) {
+        val geoPoints = cluster.vertices.map { GeoPoint(it.photo.latitude, it.photo.longitude) }
+        if (geoPoints.isNotEmpty()) {
+            val boundingBox = org.osmdroid.util.BoundingBox.fromGeoPointsSafe(geoPoints)
+            val center = boundingBox.centerWithDateLine
+
+            val radius = geoPoints.maxOfOrNull {
+                center.distanceToAsDouble(it)
+            } ?: 0.0
+
+            val circleOverlay = Polygon(mapView).apply {
+                points = createCircle(center, radius)
+                fillPaint.color = 0x44FF0000
+                outlinePaint.color = 0x00FF0000
+                outlinePaint.strokeWidth = 2.0f
+                setOnClickListener { _, _, _ ->
+                    showClusterInfoDialog(cluster)
+                    true
+                }
+            }
+
+            mapView.overlays.add(circleOverlay)
+        }
+    }
+
+    private fun createCircle(center: GeoPoint, radius: Double): List<GeoPoint> {
+        val points = mutableListOf<GeoPoint>()
+        val steps = 36
+        for (i in 0 until steps) {
+            val angle = Math.toRadians((i * 360.0 / steps))
+            val latitudeOffset = radius / 6378137.0 * Math.cos(angle)
+            val longitudeOffset = radius / (6378137.0 * Math.cos(Math.toRadians(center.latitude))) * Math.sin(angle)
+            points.add(GeoPoint(
+                center.latitude + Math.toDegrees(latitudeOffset),
+                center.longitude + Math.toDegrees(longitudeOffset)
+            ))
+        }
+        points.add(points.first())
+        return points
+    }
+
+    private fun drawEdgeOnMap(cluster1: ClusterVertexModel, cluster2: ClusterVertexModel) {
+        val geoPoint1 = GeoPoint(
+            cluster1.vertices.first().photo.latitude,
+            cluster1.vertices.first().photo.longitude
+        )
+        val geoPoint2 = GeoPoint(
+            cluster2.vertices.first().photo.latitude,
+            cluster2.vertices.first().photo.longitude
+        )
+
+        val polyline = Polyline(mapView).apply {
+            addPoint(geoPoint1)
+            addPoint(geoPoint2)
+            setOnClickListener { _, _, _ ->
+                true
+            }
+        }
+        polyline.outlinePaint.apply {
+            color = android.graphics.Color.RED
+            strokeWidth = 5f
+            isAntiAlias = true
+        }
+
+        mapView.overlays.add(polyline)
+        mapView.invalidate()
+    }
+
+    private fun showClusterInfoDialog(cluster: ClusterVertexModel) {
+        val clusterInfo = """
+        ID: ${cluster.id}
+        
+        Vertices:
+        ${cluster.vertices.joinToString(separator = "\n\n") { it.photo.id }}
+        
+        Edges:
+        ${cluster.edges.joinToString(separator = "\n\n")}
+        """.trimIndent()
+
+        val dialogBuilder = AlertDialog.Builder(this)
+        dialogBuilder.setTitle("Informacje o skupisku")
+        dialogBuilder.setMessage(clusterInfo)
+        dialogBuilder.setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
+        dialogBuilder.show()
+    }
+
+    //endregion
+
+    //region SaveData
 
     private fun saveRun()
     {
@@ -192,7 +248,7 @@ class GraphActivity : AppCompatActivity() {
         }
 
         val photoDir = File(getExternalFilesDir(null), "photos")
-        val metadataFile = File(getExternalFilesDir(null), "photo_metadata.txt")
+        val metadataFile = File(getExternalFilesDir(null), "photo_metadata.json")
         val graphFile = File(getExternalFilesDir(null), "graph.json")
         val clustersFile = File(getExternalFilesDir(null), "clusters.json")
 
@@ -261,4 +317,6 @@ class GraphActivity : AppCompatActivity() {
 
         return isMetadataFileAvailable && isGraphFileAvailable && isclustersFileAvailable && arePhotosAvailable
     }
+
+    //endregion
 }

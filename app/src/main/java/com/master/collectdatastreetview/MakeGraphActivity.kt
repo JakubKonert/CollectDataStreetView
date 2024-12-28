@@ -17,15 +17,20 @@ import java.util.Date
 import java.util.Locale
 
 class MakeGraphActivity : AppCompatActivity() {
+
+    //region Props
     private lateinit var mapView: MapView
     private lateinit var btnBack: Button
     private lateinit var btnSaveGraph: Button
 
     private var clusters: MutableList<ClusterModel> = mutableListOf()
     private var graphClusters: MutableList<ClusterVertexModel> = mutableListOf()
+    private val mapper = Mapper()
 
     private var selectedCluster: ClusterVertexModel? = null
     private val connectionLines = mutableMapOf<Polyline, Pair<ClusterVertexModel, ClusterVertexModel>>()
+
+    //endregion
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,6 +41,9 @@ class MakeGraphActivity : AppCompatActivity() {
         btnBack = findViewById(R.id.btn_back)
         btnSaveGraph = findViewById(R.id.btn_save_graph)
 
+        mapView.setMultiTouchControls(true)
+        mapView.controller.setZoom(20.0)
+
         btnBack.setOnClickListener {
             finish()
         }
@@ -44,42 +52,68 @@ class MakeGraphActivity : AppCompatActivity() {
             saveGraphToFile()
         }
 
-        loadClustersAndDisplayOnMap()
-        createGraphForClusters()
+        loadClustersToMemory()
+        loadOrInitializeGraph()
     }
 
     //region LoadData
 
-    private fun loadClustersAndDisplayOnMap() {
+    private fun loadClustersToMemory() {
         val clusterFile = File(getExternalFilesDir(null), "clusters.json")
 
         if (!clusterFile.exists()) {
             return
         }
 
-        graphClusters.clear()
-
         try {
             val clusterListFromFile: List<ClusterModel> = Json.decodeFromString(clusterFile.readText())
 
-            for (cluster in clusterListFromFile)
-            {
-                if(clusters.none{it.id == cluster.id})
-                {
+            for (cluster in clusterListFromFile) {
+                if (clusters.none { it.id == cluster.id }) {
                     clusters.add(cluster)
-                    displayClusterOnMap(cluster)
                 }
             }
 
-            mapClustersToGraph()
-            clusters.firstOrNull()?.photos?.firstOrNull()?.let {
-                mapView.controller.setCenter(GeoPoint(it.latitude, it.longitude))
-            }
-
-            mapView.invalidate()
-
+            Toast.makeText(this, "Klastry wczytane do pamięci.", Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
             e.printStackTrace()
+            Toast.makeText(this, "Błąd podczas wczytywania klastrów.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun loadOrInitializeGraph() {
+        val graphFile = File(getExternalFilesDir(null), "graph.json")
+        if (graphFile.exists() && graphFile.length() > 0L) {
+            try {
+                val graphModel = Json.decodeFromString<GraphModel>(graphFile.readText())
+
+                graphClusters.clear()
+                graphClusters.addAll(graphModel.vertices)
+
+                for (cluster in graphClusters) {
+                    displayClusterOnMap(cluster)
+                }
+
+                for (cluster in graphClusters) {
+                    for (connectedClusterId in cluster.edges) {
+                        val connectedCluster = graphClusters.find { it.id == connectedClusterId }
+                        if (connectedCluster != null) {
+                            connectClusters(cluster, connectedCluster)
+                        }
+                    }
+                }
+
+                Toast.makeText(this, "Wczytano graf z pliku.", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Toast.makeText(this, "Błąd podczas wczytywania grafu. Wyświetlanie domyślne.", Toast.LENGTH_SHORT).show()
+                initializeGraphFromClusters()
+            }
+        } else {
+            initializeGraphFromClusters()
+        }
+        graphClusters.firstOrNull()?.vertices?.firstOrNull()?.let{
+            mapView.controller.setCenter(GeoPoint(it.photo.latitude, it.photo.longitude))
         }
     }
 
@@ -112,37 +146,38 @@ class MakeGraphActivity : AppCompatActivity() {
 
     //endregion
 
-
     //region Cluster
 
-    private fun mapClustersToGraph() {
-       graphClusters.clear()
-        for (cluster in clusters) {
-            val vertices = cluster.photos.map { photo ->
-                    VertexModel(photo = photo, edges = mutableListOf())
-                }
-            for (vertex in vertices) {
-                    vertex.edges.addAll(vertices.filter { it.photo.id != vertex.photo.id }.map { it.photo.id })
-                }
-            graphClusters.add(ClusterVertexModel(id = cluster.id, vertices = vertices, edges = emptyList()))
+    private fun initializeGraphFromClusters() {
+        mapClustersToGraph()
+        for (cluster in graphClusters) {
+            displayClusterOnMap(cluster)
         }
     }
 
-    //endregion
-
-    //region Edges
-
-    private fun createGraphForClusters() {
+    private fun mapClustersToGraph() {
+        graphClusters.clear()
         for (cluster in clusters) {
+            if (graphClusters.any { it.id == cluster.id }) continue
+
             val vertices = cluster.photos.map { photo ->
-                VertexModel(
-                    photo = photo,
-                    edges = cluster.photos.filter { it.id != photo.id }
-                        .map { it.id }
-                        .toMutableList()
+                mapper.mapPhotoModelToVertexModel(photo)
+            }
+
+            for (vertex in vertices) {
+                vertex.edges.addAll(
+                    vertices.filter { it.photo.id != vertex.photo.id }
+                        .map { it.photo.id }
                 )
             }
-            graphClusters.add(ClusterVertexModel(id = cluster.id, vertices = vertices, edges = emptyList()))
+
+            graphClusters.add(
+                ClusterVertexModel(
+                    id = cluster.id,
+                    vertices = vertices,
+                    edges = emptyList()
+                )
+            )
         }
     }
 
@@ -150,8 +185,8 @@ class MakeGraphActivity : AppCompatActivity() {
 
     //region Map
 
-    private fun displayClusterOnMap(cluster: ClusterModel) {
-        val geoPoints = cluster.photos.map { GeoPoint(it.latitude, it.longitude) }
+    private fun displayClusterOnMap(cluster: ClusterVertexModel) {
+        val geoPoints = cluster.vertices.map { GeoPoint(it.photo.latitude, it.photo.longitude) }
         if (geoPoints.isNotEmpty()) {
             val boundingBox = org.osmdroid.util.BoundingBox.fromGeoPointsSafe(geoPoints)
             val center = boundingBox.centerWithDateLine
@@ -162,7 +197,7 @@ class MakeGraphActivity : AppCompatActivity() {
 
             val circleOverlay = Polygon(mapView).apply {
                 id = cluster.id
-                points = createCircle(center, radius)
+                points = createCircle(center, radius + 5)
                 fillPaint.color = 0x44FF0000
                 outlinePaint.color = 0x00FF0000
                 outlinePaint.strokeWidth = 2.0f
@@ -196,8 +231,18 @@ class MakeGraphActivity : AppCompatActivity() {
     }
 
     private fun connectClusters(cluster1: ClusterVertexModel, cluster2: ClusterVertexModel) {
-        cluster1.edges = cluster1.edges.plus(cluster2.id)
-        cluster2.edges = cluster2.edges.plus(cluster1.id)
+        if (!cluster1.edges.contains(cluster2.id)) {
+            cluster1.edges = cluster1.edges.plus(cluster2.id)
+        }
+
+        if (!cluster2.edges.contains(cluster1.id)) {
+            cluster2.edges = cluster2.edges.plus(cluster1.id)
+        }
+
+        if (connectionLines.values.any { it == Pair(cluster1, cluster2) || it == Pair(cluster2, cluster1) }) {
+            Toast.makeText(this, "Połączenie już istnieje między: ${cluster1.id} and ${cluster2.id}", Toast.LENGTH_SHORT).show()
+            return
+        }
 
         val geoPoint1 = GeoPoint(
             cluster1.vertices.first().photo.latitude,
@@ -218,7 +263,7 @@ class MakeGraphActivity : AppCompatActivity() {
         }
         polyline.outlinePaint.apply {
             color = android.graphics.Color.RED
-            strokeWidth = 15f
+            strokeWidth = 5f
             isAntiAlias = true
         }
 
