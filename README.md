@@ -17,7 +17,7 @@ Wymagania:
 
 
 Działanie aplikacji:
-- Aplikacja polega na robieniu zdjęć np. podczas spaceru. Sama idea aplikacji jest podobna do streetview od Google. Dane te zostaną wykorzystane do nauczenia komputera podejmowania decyzji, aby jaknajefektywniej znaleźć przystanek autobusowy poprzez analizę obrazu.
+- Aplikacja polega na robieniu zdjęć np. podczas spaceru. Sama idea aplikacji jest podobna do streetview od Google. Dane te zostaną wykorzystane do nauczenia komputera podejmowania decyzji, aby jak najefektywniej znaleźć przystanek autobusowy poprzez analizę obrazu.
 
 
 Opis ekranów aplikacji:
@@ -121,6 +121,7 @@ Działanie aplikacji najłatwiej będzie przedstawić na przykładzie:
 Porady i ewentualne problemy:
 - Czasem mapa może pokazywać niebieskie tło. Najpewniej nie ustawiła prawidłowo swojego centrum i pokazuje środek jakiegoś zbiornika wodnego. Należy wtedy oddalić mapę, aż zacznie być widoczny ląd i przesunąć mapę palcami tak aby wskazywała interesujące nas centrum.
 - Zdjęcia należy robić horyzontalnie/poziomo, a podczas zapisania zdjęcia mieć telefon położony poziomo na ręce. Ograniczy to niedokładność i chaotyczne działanie kompasu.
+- Wprawdzie celem pracy jest nauczyć komputer znajdowania celu w postaci przystanku autobusowego, ale dana trasa może takiego nie obejmować lub obejmować więcej niż 1. Takie dane również są przydatne i dodają dodatkowe scenariusze nauki komputera.
 
 
 W razie wątpliwość, problemów lub pytań proszę o kontakt oraz z góry dziękuję za pomoc :)
