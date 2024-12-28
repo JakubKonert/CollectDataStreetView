@@ -10,8 +10,10 @@ Wymagania:
 
 
 - Aby zainstalować aplikację należy zezwolić na instalacje aplikacji z nieznanego źródła (aplikacja nie jest wystawiona na Play Store i instalowana jest bezpośrednio z pliku .apk). Jak to zrobić na swoim telefonie najlepiej jest to wygooglować. Może się okazać, że trzeba najpierw włączyć tryb developerski w telefonie, jeśli to będzie wymagane to najlepiej również wygooglować jak to zrobić.
-- Aby zainstalować aplikację należy z głównego folderu tego repozytorium pobrać plik app-release.apk np. poprzez wejście na ten link https://github.com/JakubKonert/CollectDataStreetView/blob/main/app-release.apk (lub bezpośrednio z głównego folderu repozytorum) i kliknąc "trzy kropki" w prawym górnym rogu okna. Następnie wybrać opcję "Download". W tym miejscu zawsze będzie najnowsza/aktualna wersja aplikacji i zainteresowni będą poinformowni, że pojawiła się nowa wersja oraz co się zmieniło. Pobrany plik należy przerzucić na pamięć telefonu oraz go uruchomić, nastąpi wtedy instalacja aplikacji.
+- Aby zainstalować aplikację należy z głównego folderu tego repozytorium pobrać plik app-release.apk np. poprzez wejście na ten link https://github.com/JakubKonert/CollectDataStreetView/blob/main/app-release.apk (lub bezpośrednio z głównego folderu repozytorum) i kliknąc "trzy kropki" w prawym górnym rogu okna.
+-  Następnie wybrać opcję "Download". W tym miejscu zawsze będzie najnowsza/aktualna wersja aplikacji i zainteresowni będą poinformowni, że pojawiła się nowa wersja oraz co się zmieniło. Pobrany plik należy przerzucić na pamięć telefonu oraz go uruchomić, nastąpi wtedy instalacja aplikacji.
 - Wszystkie pliki aplikacji są zapisane w pamięci urządzenia tam gdzie inne aplikacje. W moim przypadku ta ścieżka to "Android/Data/com.master.collectdatastreetview/files/"
+![downloadAPK](https://github.com/user-attachments/assets/d4215525-e232-40a4-ba7c-3442af110267)
 
 
 Działanie aplikacji:
