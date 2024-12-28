@@ -7,9 +7,9 @@ Wymagania:
 - Uprawnienie do lokalizacji (śledzona jest pozycja użytkownika oraz zapisywana jest lokalizacja zrobienia zdjęcia) (lokalizacja musi być włączona podczas działania aplikacji)
 - Uprawnienie do zapisu/odczytu w pamięci urządzenia (dane zebrane podczas działania aplikacji są zapisywane w pamięci urządzenia i również są z niego wczytywane podczas ponownego włączenia aplikacji)
 
--Aby zainstalować aplikację należy zezwolić na instalacje aplikacji z nieznanego źródła (aplikacja nie jest wystawiona na Play Store i instalowana jest bezpośrednio z pliku .apk). Jak to zrobić na swoim telefonie najlepiej jest to wygooglować. Może się okazać, że trzeba najpierw włączyć tryb developerski w telefonie, jeśli to będzie wymagane to najlepiej również wygooglować jak to zrobić.
--Aby zainstalować aplikację należy z głównego folderu tego repozytorium pobrać plik app-release.apk np. poprzez wejście na ten link https://github.com/JakubKonert/CollectDataStreetView/blob/main/app-release.apk (lub bezpośrednio z głównego folderu repozytorum) i kliknąc "trzy kropki" w prawym górnym rogu okna. Następnie wybrać opcję "Download". W tym miejscu zawsze będzie najnowsza/aktualna wersja aplikacji i zainteresowni będą poinformowni, że pojawiła się nowa wersja oraz co się zmieniło. Pobrany plik należy przerzucić na pamięć telefonu oraz go uruchomić, nastąpi wtedy instalacja aplikacji.
--Wszystkie pliki aplikacji są zapisane w pamięci urządzenia tam gdzie inne aplikacje. W moim przypadku ta ścieżka to "Android/Data/com.master.collectdatastreetview/files/"
+- Aby zainstalować aplikację należy zezwolić na instalacje aplikacji z nieznanego źródła (aplikacja nie jest wystawiona na Play Store i instalowana jest bezpośrednio z pliku .apk). Jak to zrobić na swoim telefonie najlepiej jest to wygooglować. Może się okazać, że trzeba najpierw włączyć tryb developerski w telefonie, jeśli to będzie wymagane to najlepiej również wygooglować jak to zrobić.
+- Aby zainstalować aplikację należy z głównego folderu tego repozytorium pobrać plik app-release.apk np. poprzez wejście na ten link https://github.com/JakubKonert/CollectDataStreetView/blob/main/app-release.apk (lub bezpośrednio z głównego folderu repozytorum) i kliknąc "trzy kropki" w prawym górnym rogu okna. Następnie wybrać opcję "Download". W tym miejscu zawsze będzie najnowsza/aktualna wersja aplikacji i zainteresowni będą poinformowni, że pojawiła się nowa wersja oraz co się zmieniło. Pobrany plik należy przerzucić na pamięć telefonu oraz go uruchomić, nastąpi wtedy instalacja aplikacji.
+- Wszystkie pliki aplikacji są zapisane w pamięci urządzenia tam gdzie inne aplikacje. W moim przypadku ta ścieżka to "Android/Data/com.master.collectdatastreetview/files/"
 
 Działanie aplikacji:
 Aplikacja polega na robieniu zdjęć np. podczas spaceru. Sama idea aplikacji jest podobna do streetview od Google. Dane te zostaną wykorzystane do nauczenia komputera podejmowania decyzji, aby jaknajefektywniej znaleźć przystanek autobusowy poprzez analizę obrazu.
@@ -20,15 +20,15 @@ Ekran główny:
 
 ![image](https://github.com/user-attachments/assets/07a61dfb-b7b5-4fb5-ba86-add457a5654a)
 
--Mapa - wyświetla zrobione zdjęcia, skupiska (cluster) oraz aktualną lokalizację użytkownika (aktualizowana co 1 sekundę).
--Menu - wyświetla dodatkowe opcje, które zostaną opisane później.
--Ikona kompasu - róg z literą N wskazuje kierunek, gdzie znajduje się północ. Ikona lubi szaleć, więc aby sprawdzić gdzie znajduje się północ to warto położyć poziomo telefon na ręce.
--Napis "Najbliższe zdjęcie" - wyświetla w metrach oraz kierunek w którym znajduje się najbliższe wykonane wcześniej zdjęcie.
--Napis "Liczba skupisk" - wyświetla aktualną liczbę skupisk.
+- Mapa - wyświetla zrobione zdjęcia, skupiska (cluster) oraz aktualną lokalizację użytkownika (aktualizowana co 1 sekundę).
+- Menu - wyświetla dodatkowe opcje, które zostaną opisane później.
+- Ikona kompasu - róg z literą N wskazuje kierunek, gdzie znajduje się północ. Ikona lubi szaleć, więc aby sprawdzić gdzie znajduje się północ to warto położyć poziomo telefon na ręce.
+- Napis "Najbliższe zdjęcie" - wyświetla w metrach oraz kierunek w którym znajduje się najbliższe wykonane wcześniej zdjęcie.
+- Napis "Liczba skupisk" - wyświetla aktualną liczbę skupisk.
 Skupisko reprezentuje zdjęcia wykonane 9 metrów (domyślnie) od siebie.
 
--Napis "Log" - wyświetla informację o aktualnej pozycji użytkownika (długość i szerokość geograficzna) oraz służy do wyświetlania dodatkowych informacji np. informacji o błędach.
--Przycisk "Zrób zdjęcie" - pozwala na uruchomienie aparatu i zrobienia zdjęcia.
+- Napis "Log" - wyświetla informację o aktualnej pozycji użytkownika (długość i szerokość geograficzna) oraz służy do wyświetlania dodatkowych informacji np. informacji o błędach.
+- Przycisk "Zrób zdjęcie" - pozwala na uruchomienie aparatu i zrobienia zdjęcia.
 
 Przykładowy ekran główny (z przykładowwą trasą (dla celów pokazowych, mniejsza niż powinna być)):
 
@@ -39,21 +39,21 @@ Przykładowy ekran główny (z przykładowwą trasą (dla celów pokazowych, mni
 
 ![image](https://github.com/user-attachments/assets/b5a43e8c-2a2a-4f5c-907a-a0ce2b1612e5)
 
--Napis "Collect Data App" - to nazwa aplikacji i nie jest interaktywny.
--Opcja "Auto focus" - to przełącznik, który pozwala na włączenie lub wyłączenie centrowania mapy względem aktualnej pozycji użytkownika. Domyślnie co 1 sekundę odczytywana jest aktualna pozycja użytkownika i centrum mapy jest ustawiane na tą pozycję. Może to powodować, że mapa zacznie niewygodnie skakać. Tym przyciskiem można to wyłączyć.
--Opcja "Wczytaj zdjęcia" - pozwala wczytać wcześniej wykonane zdjęcia, podczas poprzedniego działania aplikacji. Pozwala to wczytać wcześniej zebrane dane i powrócić do zbierania danych na tym samym obszarze.
--Opcja "Twórz połączenia" - wyświetla ekran do tworzenia połączeń (zostanie on opisany szerzej poniżej). Pozwala on łączyć skupiska zdjęć liniami, które reprezentują połączenie między skupiskami na zasadzie z tego miejsca można przejść w to miejsce.
--Opcja "Pokaż graf" - wyświetla ekran do wyświetlenia stworzonego grafu oraz zapisania go (zostanie on opisany szerzej poniżej). Ekran ten służy do zapisania sesji zbierania danych do osobnego folderu, który reprezentuje dany przebieg.
--Opcja "Tryb Developerski" - to przełącznik dla celów testowych. Podczas normalnego użytkowania aplikacji nie jest on potrzebny. Po jego aktywowaniu zmienia on działanie ustawiania aktualnej lokalizacji użytkownika z tej podawanej przez lokalizację gps z telefonu, na miejsce na mapie gdzie kliknięto palcem/myszką.
--Napis "1.X" - Reprezentuje wersje aplikacji i nie jest interaktywny.
+- Napis "Collect Data App" - to nazwa aplikacji i nie jest interaktywny.
+- Opcja "Auto focus" - to przełącznik, który pozwala na włączenie lub wyłączenie centrowania mapy względem aktualnej pozycji użytkownika. Domyślnie co 1 sekundę odczytywana jest aktualna pozycja użytkownika i centrum mapy jest ustawiane na tą pozycję. Może to powodować, że mapa zacznie niewygodnie skakać. Tym przyciskiem można to wyłączyć.
+- Opcja "Wczytaj zdjęcia" - pozwala wczytać wcześniej wykonane zdjęcia, podczas poprzedniego działania aplikacji. Pozwala to wczytać wcześniej zebrane dane i powrócić do zbierania danych na tym samym obszarze.
+- Opcja "Twórz połączenia" - wyświetla ekran do tworzenia połączeń (zostanie on opisany szerzej poniżej). Pozwala on łączyć skupiska zdjęć liniami, które reprezentują połączenie między skupiskami na zasadzie z tego miejsca można przejść w to miejsce.
+- Opcja "Pokaż graf" - wyświetla ekran do wyświetlenia stworzonego grafu oraz zapisania go (zostanie on opisany szerzej poniżej). Ekran ten służy do zapisania sesji zbierania danych do osobnego folderu, który reprezentuje dany przebieg.
+- Opcja "Tryb Developerski" - to przełącznik dla celów testowych. Podczas normalnego użytkowania aplikacji nie jest on potrzebny. Po jego aktywowaniu zmienia on działanie ustawiania aktualnej lokalizacji użytkownika z tej podawanej przez lokalizację gps z telefonu, na miejsce na mapie gdzie kliknięto palcem/myszką.
+- Napis "1.X" - Reprezentuje wersje aplikacji i nie jest interaktywny.
 
 Ekran "Twórz połączenia":
 
 ![makeConnectionEmpty](https://github.com/user-attachments/assets/ec6f7f0a-1ade-490a-ac95-c4f2b380058b)
 
--Przy starcie tego ekranu są wczytywane zdjęcia oraz skupiska wykonane na ekranie głównym aplikacji. Jeśli wcześniej zapisano graf i nie zapisano przebiegu trasy to zostanie on wczytany, aby można było go dokończyć.
--Przycisk "Wróć" - wraca do głównego ekranu aplikacji.
--Przycisk "Zapisz graf" - zapisuje aktualny stan grafu do pliku graph.json. Plik ten przetrzymuje informacje o skupiskach oraz połączeniami między nimi.
+- Przy starcie tego ekranu są wczytywane zdjęcia oraz skupiska wykonane na ekranie głównym aplikacji. Jeśli wcześniej zapisano graf i nie zapisano przebiegu trasy to zostanie on wczytany, aby można było go dokończyć.
+- Przycisk "Wróć" - wraca do głównego ekranu aplikacji.
+- Przycisk "Zapisz graf" - zapisuje aktualny stan grafu do pliku graph.json. Plik ten przetrzymuje informacje o skupiskach oraz połączeniami między nimi.
 
 Przykładowy ekran "Twórz połączenia":
 
@@ -61,9 +61,9 @@ Przykładowy ekran "Twórz połączenia":
 
 Ekran "Pokaż graf":
 
--Przycisk "Wczytaj graf" - wczytuje graf z pliku graph.json i wyświetla go na mapie. Graf ten jest tylko do odczytu i pozwala na wizualizacje go na mapie.
--Przycisk "Wróć" - wraca do głównego ekranu aplikacji.
--Przycisk "Zapisz trasę" - zapisuje daną trasę poprzez przeniesienia wszystkich aktualnych plików z danymi do osobnego folderu. Powinien on zostać wciśnięty tylko gdy chcemy zapisać trasę, gdy ją skończymy, zrobimy wszystkie połączenia i chce się ją zapisać. Dopiero gdy zapisze się poprzednią trasę można rozpocząć nową. Do wcześniej zapisane trasy nie można łatwo wrócić, więc trzeba być pewien że wszystko z nią związane zakończono i chce się to zrobić.
+- Przycisk "Wczytaj graf" - wczytuje graf z pliku graph.json i wyświetla go na mapie. Graf ten jest tylko do odczytu i pozwala na wizualizacje go na mapie.
+- Przycisk "Wróć" - wraca do głównego ekranu aplikacji.
+- Przycisk "Zapisz trasę" - zapisuje daną trasę poprzez przeniesienia wszystkich aktualnych plików z danymi do osobnego folderu. Powinien on zostać wciśnięty tylko gdy chcemy zapisać trasę, gdy ją skończymy, zrobimy wszystkie połączenia i chce się ją zapisać. Dopiero gdy zapisze się poprzednią trasę można rozpocząć nową. Do wcześniej zapisane trasy nie można łatwo wrócić, więc trzeba być pewien że wszystko z nią związane zakończono i chce się to zrobić.
 
 Przykładowy ekran "Pokaż graf":
 
@@ -93,8 +93,8 @@ Działanie aplikacji najłatwiej będzie przedstawić na przykładzie:
 18. Jeśli wybierze się opcję "Tak" wszystkie dotychczas zebrane dane w ramach tej trasy zostaną przeniesione do osobnego folderu i można wtedy przystąpić do zbierania danych z kolejnej trasy powtarzając kroki od kroku 2 do kroku 18.
 
 Porady i ewentualne problemy:
--Czasem mapa może pokazywać niebieskie tło. Najpewniej nie ustawiła prawidłowo swojego centrum i pokazuje środek jakiegoś zbiornika wodnego. Należy wtedy oddalić mapę, aż zacznie być widoczny ląd i przesunąć mapę palcami tak aby wskazywała interesujące nas centrum.
--Zdjęcia należy robić horyzontalnie/poziomo, a podczas zapisania zdjęcia mieć telefon położony poziomo na ręce. Ograniczy to niedokładność i chaotyczne działanie kompasu.
+- Czasem mapa może pokazywać niebieskie tło. Najpewniej nie ustawiła prawidłowo swojego centrum i pokazuje środek jakiegoś zbiornika wodnego. Należy wtedy oddalić mapę, aż zacznie być widoczny ląd i przesunąć mapę palcami tak aby wskazywała interesujące nas centrum.
+- Zdjęcia należy robić horyzontalnie/poziomo, a podczas zapisania zdjęcia mieć telefon położony poziomo na ręce. Ograniczy to niedokładność i chaotyczne działanie kompasu.
 
 
 W razie wątpliwość, problemów lub pytań proszę o kontakt oraz z góry dziękuję za pomoc :)
