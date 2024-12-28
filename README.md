@@ -95,7 +95,7 @@ Działanie aplikacji najłatwiej będzie przedstawić na przykładzie:
 1. Uruchamiamy aplikację, w pierwszym oknie ukazuje się ekran główny aplikacji.
 2. W pozycji zero swojej trasy należy zatrzymać się i zrobić minimum 2 zdjęcia. Przed sobą, za sobą i warto zrobić zdjęcia również z lewej strony i z prawej strony lub z innej perspektywy, która może nieść informacje. Telefon warto trzymać poziomo/horyzontalnie i po zrobieniu zdjęcia, ale przed jego zapisaniem położyć telefon płasko na ręce, aby kompas dobrze zapisał pozycje.
 3. Należy przesunąć się o 20-50 metrów dalej (osobiście przesuwam się o około 35 metrów) i powtórzyć czynność opisaną w kroku 2. Odległość od najbliższego wykonanego zdjęcia jest wyświetlana nad mapą.
-4. Kroki 2 i 3 należy powtórzyć aż ilość skupisk wyniesie około 100 lub więcej. Informacja o aktualnej ilościu skupisk jest wyświetlana nad mapą. Dobrze by trasa nie była linią prostą, a np. figurą zamkniętą z skrzyżowaniami jak to pokazano na obrazu wyżej z przykładowym ekranem głównym.
+4. Kroki 2 i 3 należy powtórzyć, aż ilość skupisk wyniesie około 100 lub więcej. Informacja o aktualnej ilościu skupisk jest wyświetlana nad mapą. Dobrze by trasa nie była linią prostą, a np. figurą zamkniętą z skrzyżowaniami jak to pokazano na obrazu wyżej z przykładowym ekranem głównym.
    - Jeśli nie skończono robić zdjęć na trasie, a wyszło się z aplikacji to można wczytać swoje dane poprzez wybranie opcji "Wczytaj zdjęcia" z menu po ponowym włączeniu aplikacji.
 5. Gdy wykonano wszystkie zdjęcia i liczba skupisk wynosi około 100 należy z menu wybrać opcję "Twórz połączenia". Opcja ta przeniesie do ekranu tworzenia połączeń między skupiskami.
 
