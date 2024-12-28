@@ -102,20 +102,20 @@ Działanie aplikacji najłatwiej będzie przedstawić na przykładzie:
 5. Gdy wykonano wszystkie zdjęcia i liczba skupisk wynosi około 100 należy z menu wybrać opcję "Twórz połączenia". Opcja ta przeniesie do ekranu tworzenia połączeń między skupiskami.
 
    
-7. Zostaną wczytane skupiska wykonanych wcześniej zdjęć (jeśli istnieje plik graph.json bo wcześniej tworzono połączenia ale nie skończono tego robić to zostanie on wczytany).
-8. Połączenie skupisk wykonuje się poprzez kliknięcie na jedno z skupisk - wtedy jest one wybrane - i kliknięcie inne sąsiadujące skupisko. Wtedy zostanie stworzone połączenie symbolizowane przez czerwoną linię.
-9. Kliknięcie 2 razy to samo skupisko anuluje jego wybranie.
-10. Połączenie można usunąć poprzez kliknięcie na czerwoną linię symbolizującą dane połączenie. Linia wtedy zostanie usunięta z mapy.
-11. Skupiska należy połączyć zgodnie z zasadą: z tego skupiska można dostać się do tego skupiska. Skupiska należy łączyć bezpośrednio z sąsiadującym tzn. jeśli mamy linię prostą złożoną z 3 skupisk to skupisko 1 można połączyć z skupiskiem 2, ale nie z skupiskiem 3.
-12. Jedno skupisko może zostać połączone z wieloma skupiskami.
-13. Po zakończeniu tworzenia połączeń lub gdy chce się zapisać swój postęp, należy kliknąć przycisk "Zapisz graf". Dane o aktualnych skupiskach i ich połączeniach zostaną zapisane do pliku graph.json.
-14. Gdy stworzono wszystkie połączenia i chce się zapisać daną trasę (np. aby móc rozpocząć kolejną) należy z ekranu głównego aplikacji wejść do menu i wybrać opcję "Pokaż graf". Opcja ta przeniesie do ekranu z wizualizacją grafu i opcją zapisu trasy.
+6. Zostaną wczytane skupiska wykonanych wcześniej zdjęć (jeśli istnieje plik graph.json bo wcześniej tworzono połączenia ale nie skończono tego robić to zostanie on wczytany).
+7. Połączenie skupisk wykonuje się poprzez kliknięcie na jedno z skupisk - wtedy jest one wybrane - i kliknięcie inne sąsiadujące skupisko. Wtedy zostanie stworzone połączenie symbolizowane przez czerwoną linię.
+8. Kliknięcie 2 razy to samo skupisko anuluje jego wybranie.
+9. Połączenie można usunąć poprzez kliknięcie na czerwoną linię symbolizującą dane połączenie. Linia wtedy zostanie usunięta z mapy.
+10. Skupiska należy połączyć zgodnie z zasadą: z tego skupiska można dostać się do tego skupiska. Skupiska należy łączyć bezpośrednio z sąsiadującym tzn. jeśli mamy linię prostą złożoną z 3 skupisk to skupisko 1 można połączyć z skupiskiem 2, ale nie z skupiskiem 3.
+11. Jedno skupisko może zostać połączone z wieloma skupiskami.
+12. Po zakończeniu tworzenia połączeń lub gdy chce się zapisać swój postęp, należy kliknąć przycisk "Zapisz graf". Dane o aktualnych skupiskach i ich połączeniach zostaną zapisane do pliku graph.json.
+13. Gdy stworzono wszystkie połączenia i chce się zapisać daną trasę (np. aby móc rozpocząć kolejną) należy z ekranu głównego aplikacji wejść do menu i wybrać opcję "Pokaż graf". Opcja ta przeniesie do ekranu z wizualizacją grafu i opcją zapisu trasy.
 
 
-15. Po wejściu na ten ekran należy kliknąć przycisk "Wczytaj graf". Zostanie wczytany plik graph.json oraz zobrazowane dane w nim zawarte w postaci wykonanych wcześniej skupisk i ich połączeń.
-16. Jeśli jest się pewien, że wszystko w ramach tej trasy jest skończone należy kliknąć przycisk "Zapisz trasę".
-17. Pojawi sie okno dialogowe z pytaniem czy chce się na pewno zapisać trasę. Należy wybrać odpowiednią dla siebie opcje.
-18. Jeśli wybierze się opcję "Tak" wszystkie dotychczas zebrane dane w ramach tej trasy zostaną przeniesione do osobnego folderu i można wtedy przystąpić do zbierania danych z kolejnej trasy powtarzając kroki od kroku 2 do kroku 18.
+14. Po wejściu na ten ekran należy kliknąć przycisk "Wczytaj graf". Zostanie wczytany plik graph.json oraz zobrazowane dane w nim zawarte w postaci wykonanych wcześniej skupisk i ich połączeń.
+15. Jeśli jest się pewien, że wszystko w ramach tej trasy jest skończone należy kliknąć przycisk "Zapisz trasę".
+16. Pojawi sie okno dialogowe z pytaniem czy chce się na pewno zapisać trasę. Należy wybrać odpowiednią dla siebie opcje.
+17. Jeśli wybierze się opcję "Tak" wszystkie dotychczas zebrane dane w ramach tej trasy zostaną przeniesione do osobnego folderu i można wtedy przystąpić do zbierania danych z kolejnej trasy powtarzając kroki od kroku 2 do kroku 17.
 
 
 Porady i ewentualne problemy:
