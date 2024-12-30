@@ -99,7 +99,7 @@ Działanie aplikacji najłatwiej będzie przedstawić na przykładzie:
 3. Należy przesunąć się o 20-50 metrów dalej (osobiście przesuwam się o około 35 metrów) i powtórzyć czynność opisaną w kroku 2. Odległość od najbliższego wykonanego zdjęcia jest wyświetlana nad mapą.
 4. Kroki 2 i 3 należy powtórzyć, aż ilość skupisk wyniesie około 100 lub więcej. Informacja o aktualnej ilościu skupisk jest wyświetlana nad mapą. Dobrze by trasa nie była linią prostą, a np. figurą zamkniętą z skrzyżowaniami jak to pokazano na obrazu wyżej z przykładowym ekranem głównym.
    - Jeśli nie skończono robić zdjęć na trasie, a wyszło się z aplikacji to można wczytać swoje dane poprzez wybranie opcji "Wczytaj zdjęcia" z menu po ponowym włączeniu aplikacji.
-5. Gdy wykonano wszystkie zdjęcia i liczba skupisk wynosi około 100 należy z menu wybrać opcję "Twórz połączenia". Opcja ta przeniesie do ekranu tworzenia połączeń między skupiskami.
+5. Gdy wykonano wszystkie zdjęcia i liczba skupisk wynosi około 50 należy z menu wybrać opcję "Twórz połączenia". Opcja ta przeniesie do ekranu tworzenia połączeń między skupiskami.
 
    
 6. Zostaną wczytane skupiska wykonanych wcześniej zdjęć (jeśli istnieje plik graph.json bo wcześniej tworzono połączenia ale nie skończono tego robić to zostanie on wczytany).
@@ -116,10 +116,11 @@ Działanie aplikacji najłatwiej będzie przedstawić na przykładzie:
 15. Jeśli jest się pewien, że wszystko w ramach tej trasy jest skończone należy kliknąć przycisk "Zapisz trasę".
 16. Pojawi sie okno dialogowe z pytaniem czy chce się na pewno zapisać trasę. Należy wybrać odpowiednią dla siebie opcje.
 17. Jeśli wybierze się opcję "Tak" wszystkie dotychczas zebrane dane w ramach tej trasy zostaną przeniesione do osobnego folderu i można wtedy przystąpić do zbierania danych z kolejnej trasy powtarzając kroki od kroku 2 do kroku 17.
+18. Mapa ze zdjęciami raczej się nie odświeży i będą widoczne znaczniki z poprzedniej trasy. Warto wtedy zamknąć aplikację i jeszcze raz ją uruchomić.
 
 
 Porady i ewentualne problemy:
-- Czasem mapa może pokazywać niebieskie tło. Najpewniej nie ustawiła prawidłowo swojego centrum i pokazuje środek jakiegoś zbiornika wodnego. Należy wtedy oddalić mapę, aż zacznie być widoczny ląd i przesunąć mapę palcami tak aby wskazywała interesujące nas centrum.
+- Czasem mapa może pokazywać niebieskie tło. Najpewniej nie ustawiła prawidłowo swojego centrum i pokazuje środek jakiegoś zbiornika wodnego. Należy wtedy oddalić mapę, aż zacznie być widoczny ląd i przesunąć mapę palcami tak aby wskazywała interesujące nas centrum (Na swoją lokalizację).
 - Zdjęcia należy robić horyzontalnie/poziomo, a podczas zapisania zdjęcia mieć telefon położony poziomo na ręce. Ograniczy to niedokładność i chaotyczne działanie kompasu.
 - Wprawdzie celem pracy jest nauczyć komputer znajdowania celu w postaci przystanku autobusowego, ale dana trasa może takiego nie obejmować lub obejmować więcej niż 1. Takie dane również są przydatne i dodają dodatkowe scenariusze nauki komputera.
 
